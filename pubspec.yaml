@@ -1,0 +1,53 @@
+name: nammaexpense
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State Management
+  provider: ^6.1.1
+  
+  # Database & Storage
+  sqflite: ^2.3.0
+  path: ^1.9.0
+  shared_preferences: ^2.2.2
+  
+  # UI & Assets
+  google_fonts: ^6.1.0
+  font_awesome_flutter: ^10.6.0
+  fl_chart: ^0.66.0
+  flutter_heatmap_calendar: ^1.0.5
+  
+  # Utilities
+  intl: ^0.19.0
+  uuid: ^4.3.3
+  pdf: ^3.10.4
+  printing: ^5.11.1
+  speech_to_text: ^7.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
+# App Icon Configuration
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/applogo.jpg"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/applogo.jpg"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/applogo.jpg
