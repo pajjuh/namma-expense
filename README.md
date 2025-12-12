@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # NammaExpense 💰
 > *Smart, Context-Aware Expense Tracking for Digital India*
 
@@ -54,3 +55,7 @@ Contributions are welcome! Please open an issue or submit a PR.
 
 ---
 *Made with ❤️ using Flutter*
+=======
+# namma-expense
+A smart, context-aware Flutter expense tracker with voice commands, split-brain insights, and bulk add features. Built with Provider &amp; Sqflite.
+>>>>>>> be9a23171128a75334313d7ddb3e3157e0e29df6
