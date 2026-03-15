@@ -98,68 +98,91 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
     final allCategories = Provider.of<UserProvider>(context).categories;
     final contextCategories = _getContextCategories(allCategories);
     final currency = Provider.of<UserProvider>(context).currency;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16,
-        right: 16,
-        top: 16,
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: screenHeight * 0.6,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(_getContextMessage(), style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 16),
-          
-          Row(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: screenWidth * 0.04,
+            right: screenWidth * 0.04,
+            top: screenHeight * 0.02,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _amountController,
-                  keyboardType: TextInputType.number,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    prefixText: '$currency ',
-                    labelText: 'Amount',
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
+              Text(
+                _getContextMessage(), 
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Note (Optional)',
-                    border: OutlineInputBorder(),
+              SizedBox(height: screenHeight * 0.02),
+              
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _amountController,
+                      keyboardType: TextInputType.number,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        prefixText: '$currency ',
+                        labelText: 'Amount',
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
                   ),
-                ),
+                  SizedBox(width: screenWidth * 0.03),
+                  Expanded(
+                    child: TextField(
+                      controller: _titleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Note (Optional)',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                ],
               ),
+              SizedBox(height: screenHeight * 0.02),
+              Text('Quick Category', style: Theme.of(context).textTheme.labelLarge),
+              SizedBox(height: screenHeight * 0.01),
+              Wrap(
+                spacing: screenWidth * 0.02,
+                runSpacing: screenHeight * 0.01,
+                children: contextCategories.map((cat) {
+                  return ChoiceChip(
+                    label: Text(
+                      cat.name,
+                      style: TextStyle(fontSize: screenWidth * 0.035),
+                    ),
+                    avatar: Icon(cat.icon, size: screenWidth * 0.035),
+                    selected: _selectedCategory == cat.id,
+                    onSelected: (val) => setState(() => _selectedCategory = val ? cat.id : null),
+                  );
+                }).toList(),
+              ),
+              SizedBox(height: screenHeight * 0.02),
+              FilledButton(
+                onPressed: _isLoading ? null : _submit,
+                style: FilledButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: screenHeight * 0.015),
+                ),
+                child: _isLoading 
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
+                  : const Text('Quick Save'),
+              ),
+              SizedBox(height: screenHeight * 0.02),
             ],
           ),
-          const SizedBox(height: 16),
-          Text('Quick Category', style: Theme.of(context).textTheme.labelLarge),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: contextCategories.map((cat) {
-              return ChoiceChip(
-                label: Text(cat.name),
-                avatar: Icon(cat.icon, size: 14),
-                selected: _selectedCategory == cat.id,
-                onSelected: (val) => setState(() => _selectedCategory = val ? cat.id : null),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: _isLoading ? null : _submit,
-            child: _isLoading ? const CircularProgressIndicator() : const Text('Quick Save'),
-          ),
-          const SizedBox(height: 24),
-        ],
+        ),
       ),
     );
   }

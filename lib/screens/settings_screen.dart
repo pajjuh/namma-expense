@@ -34,28 +34,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(screenWidth * 0.04),
         children: [
           // Profile Info
           Card(
             child: ListTile(
               leading: CircleAvatar(
+                radius: screenWidth * 0.05,
                 backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                child: Text(userProvider.userName.isNotEmpty ? userProvider.userName[0].toUpperCase() : '?'),
+                child: Text(
+                  userProvider.userName.isNotEmpty ? userProvider.userName[0].toUpperCase() : '?',
+                  style: TextStyle(fontSize: screenWidth * 0.045),
+                ),
               ),
-              title: Text(userProvider.userName),
+              title: Text(
+                userProvider.userName,
+                overflow: TextOverflow.ellipsis,
+              ),
               subtitle: Text('Mode: ${userProvider.userMode.name.toUpperCase()}'),
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: screenHeight * 0.03),
 
           // Theme Toggle
           Text('Appearance', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
+          SizedBox(height: screenHeight * 0.01),
           SwitchListTile(
             title: const Text('Dark Mode'),
             subtitle: const Text('Enable dark theme'),
@@ -66,9 +75,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
 
           // Daily Limit
-          const SizedBox(height: 16),
+          SizedBox(height: screenHeight * 0.02),
           Text('Budget', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
+          SizedBox(height: screenHeight * 0.01),
           Row(
             children: [
               Expanded(
@@ -79,26 +88,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     labelText: 'Daily Spending Limit',
                     prefixText: '${userProvider.currency} ',
                     border: const OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.03,
+                      vertical: screenHeight * 0.015,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: screenWidth * 0.02),
               FilledButton(
                 onPressed: _saveDailyLimit,
                 child: const Text('Save'),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: screenHeight * 0.01),
           Text(
             'You will see a warning when you exceed this limit.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
-          const Divider(height: 32),
+          Divider(height: screenHeight * 0.04),
 
           // Mode Switch
           Text('User Mode', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
+          SizedBox(height: screenHeight * 0.01),
           ...UserMode.values.map((mode) {
             IconData icon;
             switch (mode) {
@@ -115,7 +129,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             return RadioListTile<UserMode>(
               title: Text(mode.name[0].toUpperCase() + mode.name.substring(1)),
-              secondary: Icon(icon),
+              secondary: Icon(icon, size: screenWidth * 0.05),
               value: mode,
               groupValue: userProvider.userMode,
               onChanged: (val) {
@@ -129,7 +143,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             );
           }),
-          const Divider(height: 32),
+          Divider(height: screenHeight * 0.04),
 
           // About / Version
           ListTile(

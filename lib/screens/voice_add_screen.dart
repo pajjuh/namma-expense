@@ -135,66 +135,101 @@ class _VoiceAddScreenState extends State<VoiceAddScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final micButtonSize = screenWidth * 0.13;
+    
     return Scaffold(
       appBar: AppBar(title: const Text('Voice Add 🎙️')),
-      body: SingleChildScrollView(
-        reverse: true,
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            Text(
-              'Say something like:\n"50 rupees for Coffee"',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey),
-            ),
-            const SizedBox(height: 40),
-            
-            // Microphone Button
-            GestureDetector(
-              onTapUp: (_) => _listen(),
-              child: AvatarGlow(
-                animate: _isListening,
-                glowColor: Theme.of(context).primaryColor,
-                duration: const Duration(milliseconds: 2000),
-                repeat: true,
-                child: CircleAvatar(
-                  backgroundColor: _isListening ? Colors.red : Theme.of(context).primaryColor,
-                  radius: 50,
-                  child: Icon(
-                    _isListening ? Icons.mic : Icons.mic_none,
-                    color: Colors.white,
-                    size: 40,
-                  ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: EdgeInsets.all(screenWidth * 0.06),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight - screenWidth * 0.12),
+              child: IntrinsicHeight(
+                child: Column(
+                  children: [
+                    SizedBox(height: screenHeight * 0.02),
+                    Text(
+                      'Say something like:\n"50 rupees for Coffee"',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey),
+                    ),
+                    SizedBox(height: screenHeight * 0.05),
+                    
+                    // Microphone Button
+                    GestureDetector(
+                      onTapUp: (_) => _listen(),
+                      child: AvatarGlow(
+                        animate: _isListening,
+                        glowColor: Theme.of(context).primaryColor,
+                        duration: const Duration(milliseconds: 2000),
+                        repeat: true,
+                        child: CircleAvatar(
+                          backgroundColor: _isListening ? Colors.red : Theme.of(context).primaryColor,
+                          radius: micButtonSize,
+                          child: Icon(
+                            _isListening ? Icons.mic : Icons.mic_none,
+                            color: Colors.white,
+                            size: micButtonSize * 0.8,
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    SizedBox(height: screenHeight * 0.04),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                      child: Text(
+                        _text,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.055, 
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    
+                    if (_parsedAmount != null && _parsedAmount! > 0) ...[
+                        SizedBox(height: screenHeight * 0.04),
+                        const Divider(),
+                        SizedBox(height: screenHeight * 0.01),
+                        Text(
+                          'Parsed Expense', 
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        SizedBox(height: screenHeight * 0.02),
+                        Card(
+                          child: ListTile(
+                            leading: Icon(
+                              Icons.check_circle, 
+                              color: Colors.green, 
+                              size: screenWidth * 0.1,
+                            ),
+                            title: Text(
+                              '₹${_parsedAmount!.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                fontSize: screenWidth * 0.05,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text('Note: $_parsedNote'),
+                            trailing: FilledButton(
+                              onPressed: _confirmTransaction, 
+                              child: const Text('Confirm'),
+                            ),
+                          ),
+                        ),
+                    ],
+                    
+                    const Spacer(),
+                  ],
                 ),
               ),
             ),
-            
-            const SizedBox(height: 30),
-            Text(
-              _text,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
-            ),
-            
-            if (_parsedAmount != null && _parsedAmount! > 0) ...[
-                const SizedBox(height: 40),
-                const Divider(),
-                const SizedBox(height: 10),
-                Text('Parsed Expense', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 20),
-                ListTile(
-                    leading: const Icon(Icons.check_circle, color: Colors.green, size: 40),
-                    title: Text('${_parsedAmount!}'),
-                    subtitle: Text('Note: $_parsedNote'),
-                    trailing: FilledButton(
-                        onPressed: _confirmTransaction, 
-                        child: const Text('Confirm'),
-                    ),
-                )
-            ]
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -219,15 +254,17 @@ class AvatarGlow extends StatelessWidget {
 
     @override
     Widget build(BuildContext context) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        
         return Container(
-            padding: const EdgeInsets.all(20), // Placeholder for gap
+            padding: EdgeInsets.all(screenWidth * 0.05),
             decoration: animate ? BoxDecoration(
                 shape: BoxShape.circle,
                 boxShadow: [
                     BoxShadow(
                         color: glowColor.withOpacity(0.5),
-                        blurRadius: 20,
-                        spreadRadius: 10,
+                        blurRadius: screenWidth * 0.05,
+                        spreadRadius: screenWidth * 0.025,
                     )
                 ]
             ) : null,

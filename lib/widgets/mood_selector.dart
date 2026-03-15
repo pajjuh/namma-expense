@@ -13,6 +13,10 @@ class MoodSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final emojiSize = screenWidth * 0.08;
+    final containerPadding = screenWidth * 0.03;
+    
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: Mood.values.map((mood) {
@@ -21,7 +25,7 @@ class MoodSelector extends StatelessWidget {
           onTap: () => onMoodSelected(mood),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(containerPadding),
             decoration: BoxDecoration(
               color: isSelected ? Theme.of(context).colorScheme.primaryContainer : Colors.transparent,
               shape: BoxShape.circle,
@@ -32,7 +36,7 @@ class MoodSelector extends StatelessWidget {
             ),
             child: Text(
               _getMoodEmoji(mood),
-              style: const TextStyle(fontSize: 32),
+              style: TextStyle(fontSize: emojiSize),
             ),
           ),
         );

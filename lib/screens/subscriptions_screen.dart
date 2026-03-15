@@ -32,91 +32,128 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
       context: context,
       isScrollControlled: true,
       builder: (ctx) {
+        final screenWidth = MediaQuery.of(ctx).size.width;
+        final screenHeight = MediaQuery.of(ctx).size.height;
+        
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 16,
-                right: 16,
-                top: 16,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text('Add Subscription', style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: titleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Name (e.g. Netflix, Gym)',
-                      border: OutlineInputBorder(),
-                    ),
+            return Container(
+              constraints: BoxConstraints(maxHeight: screenHeight * 0.6),
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom,
+                    left: screenWidth * 0.04,
+                    right: screenWidth * 0.04,
+                    top: screenHeight * 0.02,
                   ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: amountController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: 'Amount',
-                      prefixText: '${Provider.of<UserProvider>(context, listen: false).currency} ',
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        child: DropdownButtonFormField<SubscriptionCycle>(
-                          value: selectedCycle,
-                          decoration: const InputDecoration(labelText: 'Cycle', border: OutlineInputBorder()),
-                          items: SubscriptionCycle.values.map((c) {
-                            return DropdownMenuItem(value: c, child: Text(c.name.toUpperCase()));
-                          }).toList(),
-                          onChanged: (val) => setModalState(() => selectedCycle = val!),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: InkWell(
-                          onTap: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: selectedDate,
-                              firstDate: DateTime.now(),
-                              lastDate: DateTime.now().add(const Duration(days: 365)),
-                            );
-                            if (picked != null) {
-                              setModalState(() => selectedDate = picked);
-                            }
-                          },
-                          child: InputDecorator(
-                            decoration: const InputDecoration(labelText: 'Next Due', border: OutlineInputBorder()),
-                            child: Text(DateFormat.yMMMd().format(selectedDate)),
+                      Text('Add Subscription', style: Theme.of(context).textTheme.titleLarge),
+                      SizedBox(height: screenHeight * 0.02),
+                      TextField(
+                        controller: titleController,
+                        decoration: InputDecoration(
+                          labelText: 'Name (e.g. Netflix, Gym)',
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.03,
+                            vertical: screenHeight * 0.015,
                           ),
                         ),
                       ),
+                      SizedBox(height: screenHeight * 0.015),
+                      TextField(
+                        controller: amountController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Amount',
+                          prefixText: '${Provider.of<UserProvider>(context, listen: false).currency} ',
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.03,
+                            vertical: screenHeight * 0.015,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: screenHeight * 0.015),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<SubscriptionCycle>(
+                              value: selectedCycle,
+                              decoration: InputDecoration(
+                                labelText: 'Cycle', 
+                                border: const OutlineInputBorder(),
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: screenWidth * 0.03,
+                                  vertical: screenHeight * 0.012,
+                                ),
+                              ),
+                              items: SubscriptionCycle.values.map((c) {
+                                return DropdownMenuItem(value: c, child: Text(c.name.toUpperCase()));
+                              }).toList(),
+                              onChanged: (val) => setModalState(() => selectedCycle = val!),
+                            ),
+                          ),
+                          SizedBox(width: screenWidth * 0.03),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: selectedDate,
+                                  firstDate: DateTime.now(),
+                                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                                );
+                                if (picked != null) {
+                                  setModalState(() => selectedDate = picked);
+                                }
+                              },
+                              child: InputDecorator(
+                                decoration: InputDecoration(
+                                  labelText: 'Next Due', 
+                                  border: const OutlineInputBorder(),
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: screenWidth * 0.03,
+                                    vertical: screenHeight * 0.012,
+                                  ),
+                                ),
+                                child: Text(DateFormat.yMMMd().format(selectedDate)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: screenHeight * 0.02),
+                      FilledButton(
+                        onPressed: () {
+                          if (titleController.text.isNotEmpty && amountController.text.isNotEmpty) {
+                            final sub = Subscription(
+                              title: titleController.text,
+                              amount: double.parse(amountController.text),
+                              nextRenewalDate: selectedDate,
+                              cycle: selectedCycle,
+                            );
+                            Provider.of<SubscriptionProvider>(context, listen: false).addSubscription(sub);
+                            Navigator.pop(context);
+                          }
+                        },
+                        style: FilledButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: screenHeight * 0.015),
+                        ),
+                        child: const Text('Add Subscription'),
+                      ),
+                      SizedBox(height: screenHeight * 0.02),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: () {
-                      if (titleController.text.isNotEmpty && amountController.text.isNotEmpty) {
-                        final sub = Subscription(
-                          title: titleController.text,
-                          amount: double.parse(amountController.text),
-                          nextRenewalDate: selectedDate,
-                          cycle: selectedCycle,
-                        );
-                        Provider.of<SubscriptionProvider>(context, listen: false).addSubscription(sub);
-                        Navigator.pop(context);
-                      }
-                    },
-                    child: const Text('Add Subscription'),
-                  ),
-                  const SizedBox(height: 24),
-                ],
+                ),
               ),
             );
           },
@@ -129,6 +166,8 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   Widget build(BuildContext context) {
     final subProvider = Provider.of<SubscriptionProvider>(context);
     final currency = Provider.of<UserProvider>(context).currency;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       appBar: AppBar(
@@ -145,10 +184,14 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.subscriptions_outlined, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
+                  Icon(
+                    Icons.subscriptions_outlined, 
+                    size: screenWidth * 0.16, 
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: screenHeight * 0.02),
                   const Text('No subscriptions yet'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: screenHeight * 0.01),
                   FilledButton.icon(
                     onPressed: _showAddDialog,
                     icon: const Icon(Icons.add),
@@ -158,67 +201,87 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
               ),
             )
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(screenWidth * 0.04),
               children: [
                 // Monthly Total Card
                 Card(
                   color: Theme.of(context).colorScheme.primaryContainer,
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(screenWidth * 0.04),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Monthly Fixed Cost', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text(
-                          '$currency ${subProvider.monthlyTotal.toStringAsFixed(0)}',
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        const Flexible(
+                          child: Text(
+                            'Monthly Fixed Cost', 
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '$currency ${subProvider.monthlyTotal.toStringAsFixed(0)}',
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.05, 
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: screenHeight * 0.02),
 
                 // Upcoming
                 if (subProvider.upcomingSubscriptions.isNotEmpty) ...[
                   Text('Upcoming Renewals', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 8),
-                  ...subProvider.upcomingSubscriptions.map((sub) => _buildSubTile(sub, currency, isUpcoming: true)),
-                  const SizedBox(height: 16),
+                  SizedBox(height: screenHeight * 0.01),
+                  ...subProvider.upcomingSubscriptions.map((sub) => _buildSubTile(sub, currency, screenWidth, isUpcoming: true)),
+                  SizedBox(height: screenHeight * 0.02),
                 ],
 
                 // All
                 Text('All Subscriptions', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
-                ...subProvider.subscriptions.map((sub) => _buildSubTile(sub, currency)),
+                SizedBox(height: screenHeight * 0.01),
+                ...subProvider.subscriptions.map((sub) => _buildSubTile(sub, currency, screenWidth)),
               ],
             ),
     );
   }
 
-  Widget _buildSubTile(Subscription sub, String currency, {bool isUpcoming = false}) {
+  Widget _buildSubTile(Subscription sub, String currency, double screenWidth, {bool isUpcoming = false}) {
     return Dismissible(
       key: Key(sub.id),
       direction: DismissDirection.endToStart,
       background: Container(
         color: Colors.red,
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 16),
-        child: const Icon(Icons.delete, color: Colors.white),
+        padding: EdgeInsets.only(right: screenWidth * 0.04),
+        child: Icon(Icons.delete, color: Colors.white, size: screenWidth * 0.06),
       ),
       onDismissed: (_) {
         Provider.of<SubscriptionProvider>(context, listen: false).deleteSubscription(sub.id);
       },
       child: Card(
         color: isUpcoming ? Colors.amber.shade50 : null,
+        margin: EdgeInsets.only(bottom: screenWidth * 0.02),
         child: ListTile(
           leading: CircleAvatar(
+            radius: screenWidth * 0.05,
             backgroundColor: isUpcoming ? Colors.amber : Colors.grey.shade300,
-            child: Icon(Icons.repeat, color: isUpcoming ? Colors.white : Colors.black54),
+            child: Icon(
+              Icons.repeat, 
+              color: isUpcoming ? Colors.white : Colors.black54,
+              size: screenWidth * 0.05,
+            ),
           ),
-          title: Text(sub.title),
+          title: Text(sub.title, overflow: TextOverflow.ellipsis),
           subtitle: Text('${sub.cycle.name} • Due: ${DateFormat.yMMMd().format(sub.nextRenewalDate)}'),
-          trailing: Text('$currency${sub.amount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+          trailing: Text(
+            '$currency${sub.amount.toStringAsFixed(0)}', 
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );

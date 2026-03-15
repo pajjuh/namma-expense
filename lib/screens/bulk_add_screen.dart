@@ -77,6 +77,8 @@ class _BulkAddScreenState extends State<BulkAddScreen> {
   Widget build(BuildContext context) {
     final categories = Provider.of<UserProvider>(context).categories;
     final currency = Provider.of<UserProvider>(context).currency;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       appBar: AppBar(
@@ -89,22 +91,26 @@ class _BulkAddScreenState extends State<BulkAddScreen> {
         children: [
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(screenWidth * 0.04),
               itemCount: _entries.length,
               itemBuilder: (ctx, index) {
                 return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
+                  margin: EdgeInsets.only(bottom: screenHeight * 0.015),
                   child: Padding(
-                    padding: const EdgeInsets.all(12.0),
+                    padding: EdgeInsets.all(screenWidth * 0.03),
                     child: Column(
                       children: [
                         Row(
                           children: [
                             CircleAvatar(
+                              radius: screenWidth * 0.04,
                               backgroundColor: Colors.grey.shade200,
-                              child: Text('${index + 1}'),
+                              child: Text(
+                                '${index + 1}',
+                                style: TextStyle(fontSize: screenWidth * 0.035),
+                              ),
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: screenWidth * 0.03),
                             Expanded(
                               child: TextField(
                                 controller: _entries[index]['amount'],
@@ -115,16 +121,20 @@ class _BulkAddScreenState extends State<BulkAddScreen> {
                                   border: const OutlineInputBorder(),
                                   filled: true,
                                   isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: screenWidth * 0.03,
+                                    vertical: screenHeight * 0.015,
+                                  ),
                                 ),
                               ),
                             ),
                             IconButton(
                               onPressed: () => _removeRow(index),
-                              icon: const Icon(Icons.close, color: Colors.grey),
+                              icon: Icon(Icons.close, color: Colors.grey, size: screenWidth * 0.05),
                             )
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: screenHeight * 0.015),
                         Row(
                           children: [
                             Expanded(
@@ -132,22 +142,26 @@ class _BulkAddScreenState extends State<BulkAddScreen> {
                               child: DropdownButtonFormField<String>(
                                 value: _entries[index]['category'],
                                 isExpanded: true,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   labelText: 'Category',
-                                  border: OutlineInputBorder(),
+                                  border: const OutlineInputBorder(),
                                   isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: screenWidth * 0.03,
+                                    vertical: screenHeight * 0.012,
+                                  ),
                                 ),
                                 items: categories.map((c) => DropdownMenuItem(
                                   value: c.id,
                                   child: Row(
                                     children: [
-                                      Icon(c.icon, size: 16),
-                                      const SizedBox(width: 8),
+                                      Icon(c.icon, size: screenWidth * 0.04),
+                                      SizedBox(width: screenWidth * 0.02),
                                       Expanded(
                                         child: Text(
                                           c.name,
                                           overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(fontSize: 12),
+                                          style: TextStyle(fontSize: screenWidth * 0.032),
                                         ),
                                       ),
                                     ],
@@ -158,15 +172,19 @@ class _BulkAddScreenState extends State<BulkAddScreen> {
                                 },
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: screenWidth * 0.02),
                             Expanded(
                               flex: 3,
                               child: TextField(
                                 controller: _entries[index]['note'],
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   labelText: 'Note (Optional)',
-                                  border: OutlineInputBorder(),
+                                  border: const OutlineInputBorder(),
                                   isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: screenWidth * 0.03,
+                                    vertical: screenHeight * 0.015,
+                                  ),
                                 ),
                               ),
                             ),
@@ -180,14 +198,16 @@ class _BulkAddScreenState extends State<BulkAddScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(screenWidth * 0.04),
             child: SizedBox(
               width: double.infinity,
-              height: 50,
               child: FilledButton.icon(
                 onPressed: _saveAll,
                 icon: const Icon(Icons.done_all),
-                label: const Text('Save All', style: TextStyle(fontSize: 18)),
+                label: Text('Save All', style: TextStyle(fontSize: screenWidth * 0.045)),
+                style: FilledButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: screenHeight * 0.018),
+                ),
               ),
             ),
           ),

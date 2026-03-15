@@ -20,6 +20,8 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final expenseProvider = Provider.of<ExpenseProvider>(context);
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
     
     // Calculate today's spending
     final today = DateTime.now();
@@ -35,18 +37,18 @@ class HomeScreen extends StatelessWidget {
     
     return SafeArea(
       child: Scaffold(
-        body: Column(
+        body: ListView(
           children: [
             // Daily Limit Warning
             if (isOverLimit)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(screenWidth * 0.03),
                 color: Colors.red.shade100,
                 child: Row(
                   children: [
                     const Icon(Icons.warning, color: Colors.red),
-                    const SizedBox(width: 8),
+                    SizedBox(width: screenWidth * 0.02),
                     Expanded(
                       child: Text(
                         '⚠️ You exceeded your daily limit of ${userProvider.currency}${userProvider.dailyLimit.toStringAsFixed(0)}!',
@@ -59,28 +61,36 @@ class HomeScreen extends StatelessWidget {
 
             // Custom Header
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.04, 
+                vertical: screenHeight * 0.01,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_getGreeting()},',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
-                      ),
-                      Text(
-                        userProvider.userName.isEmpty ? 'Friend' : userProvider.userName,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    ],
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${_getGreeting()},',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                        ),
+                        Text(
+                          userProvider.userName.isEmpty ? 'Friend' : userProvider.userName,
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
                   CircleAvatar(
+                    radius: screenWidth * 0.05,
                     backgroundColor: isOverLimit ? Colors.red : Theme.of(context).colorScheme.primaryContainer,
                     child: Icon(
                       isOverLimit ? Icons.lock : Icons.person,
                       color: isOverLimit ? Colors.white : Theme.of(context).colorScheme.primary,
+                      size: screenWidth * 0.05,
                     ),
                   ),
                 ],
@@ -92,13 +102,15 @@ class HomeScreen extends StatelessWidget {
 
             // Recent Transactions Title
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Recent Transactions',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  Flexible(
+                    child: Text(
+                      'Recent Transactions',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
                   ),
                   TextButton(
                     onPressed: () {
@@ -113,12 +125,8 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
 
-            // List
-            const Expanded(
-              child: SingleChildScrollView(
-                child: TransactionList(),
-              ),
-            ),
+            // Transaction List (already uses shrinkWrap + NeverScrollableScrollPhysics)
+            const TransactionList(),
           ],
         ),
       ),

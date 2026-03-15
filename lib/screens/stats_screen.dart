@@ -55,6 +55,8 @@ class CategoryPieChart extends StatelessWidget {
     final categorySpending = Provider.of<ExpenseProvider>(context).categorySpending;
     final categories = Provider.of<UserProvider>(context).categories;
     final currency = Provider.of<UserProvider>(context).currency;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     if (categorySpending.isEmpty) {
       return const Center(
@@ -83,20 +85,31 @@ class CategoryPieChart extends StatelessWidget {
           value: amount,
           title: '$percentage%',
           color: cat.color,
-          radius: 80,
-          titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+          radius: screenWidth * 0.2,
+          titleStyle: TextStyle(
+            color: Colors.white, 
+            fontWeight: FontWeight.bold, 
+            fontSize: screenWidth * 0.03,
+          ),
         ),
       );
 
       legendItems.add(
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: EdgeInsets.symmetric(vertical: screenHeight * 0.005),
           child: Row(
             children: [
-              Container(width: 16, height: 16, decoration: BoxDecoration(color: cat.color, shape: BoxShape.circle)),
-              const SizedBox(width: 8),
+              Container(
+                width: screenWidth * 0.04, 
+                height: screenWidth * 0.04, 
+                decoration: BoxDecoration(color: cat.color, shape: BoxShape.circle),
+              ),
+              SizedBox(width: screenWidth * 0.02),
               Expanded(child: Text(cat.name)),
-              Text('$currency${amount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                '$currency${amount.toStringAsFixed(0)}', 
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ],
           ),
         ),
@@ -104,32 +117,32 @@ class CategoryPieChart extends StatelessWidget {
     });
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(screenWidth * 0.04),
       child: Column(
         children: [
-          const SizedBox(height: 16),
+          SizedBox(height: screenHeight * 0.02),
           SizedBox(
-            height: 250,
+            height: screenHeight * 0.3,
             child: PieChart(
               PieChartData(
                 sections: sections,
-                centerSpaceRadius: 50,
+                centerSpaceRadius: screenWidth * 0.12,
                 sectionsSpace: 2,
               ),
             ),
           ),
-          const SizedBox(height: 32),
+          SizedBox(height: screenHeight * 0.04),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(screenWidth * 0.04),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(screenWidth * 0.04),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Breakdown', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
+                SizedBox(height: screenHeight * 0.01),
                 ...legendItems,
               ],
             ),
@@ -147,6 +160,8 @@ class HeatmapView extends StatelessWidget {
   Widget build(BuildContext context) {
     final heatmapData = Provider.of<ExpenseProvider>(context).heathMapData;
     final currency = Provider.of<UserProvider>(context).currency;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     if (heatmapData.isEmpty) {
       return const Center(child: Text('No data for heatmap yet.'));
@@ -154,6 +169,9 @@ class HeatmapView extends StatelessWidget {
 
     // Find max for color scaling
     final maxVal = heatmapData.values.reduce((a, b) => a > b ? a : b);
+
+    // Calculate cell size based on screen width (7 cells per row with spacing)
+    final cellSize = (screenWidth - screenWidth * 0.12) / 7 - 4; // 7 days per row
 
     // Get last 35 days
     final today = DateTime.now();
@@ -184,17 +202,17 @@ class HeatmapView extends StatelessWidget {
           message: '${date.day}/${date.month}: $currency$value',
           child: Container(
             margin: const EdgeInsets.all(2),
-            width: 40,
-            height: 40,
+            width: cellSize,
+            height: cellSize,
             decoration: BoxDecoration(
               color: color,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(cellSize * 0.15),
             ),
             child: Center(
               child: Text(
                 '${date.day}',
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: cellSize * 0.3,
                   color: value > 0 ? Colors.white : Colors.black54,
                 ),
               ),
@@ -204,36 +222,43 @@ class HeatmapView extends StatelessWidget {
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(screenWidth * 0.04),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Last 35 Days Spending', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
+          SizedBox(height: screenHeight * 0.01),
           Row(
             children: [
-              _buildLegendItem('Low', Colors.green.shade300),
-              _buildLegendItem('Medium', Colors.orange.shade400),
-              _buildLegendItem('High', Colors.red.shade500),
+              _buildLegendItem('Low', Colors.green.shade300, screenWidth),
+              _buildLegendItem('Medium', Colors.orange.shade400, screenWidth),
+              _buildLegendItem('High', Colors.red.shade500, screenWidth),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: screenHeight * 0.02),
           Wrap(children: dayWidgets),
         ],
       ),
     );
   }
 
-  Widget _buildLegendItem(String label, Color color) {
+  Widget _buildLegendItem(String label, Color color, double screenWidth) {
     return Padding(
-      padding: const EdgeInsets.only(right: 16),
+      padding: EdgeInsets.only(right: screenWidth * 0.04),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(width: 12, height: 12, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3))),
-          const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 12)),
+          Container(
+            width: screenWidth * 0.03, 
+            height: screenWidth * 0.03, 
+            decoration: BoxDecoration(
+              color: color, 
+              borderRadius: BorderRadius.circular(screenWidth * 0.008),
+            ),
+          ),
+          SizedBox(width: screenWidth * 0.01),
+          Text(label, style: TextStyle(fontSize: screenWidth * 0.03)),
         ],
       ),
     );
@@ -248,6 +273,8 @@ class SplitBrainInsights extends StatelessWidget {
   Widget build(BuildContext context) {
     final transactions = Provider.of<ExpenseProvider>(context).transactions;
     final currency = Provider.of<UserProvider>(context).currency;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     if (transactions.isEmpty) {
       return const Center(child: Text('Add more transactions to see insights!'));
@@ -340,30 +367,30 @@ class SplitBrainInsights extends StatelessWidget {
     }
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(screenWidth * 0.04),
       children: [
         Text('🧠 Split Brain Analysis', style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: 8),
+        SizedBox(height: screenHeight * 0.01),
         Text(
           'Understanding your spending psychology',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
         ),
-        const SizedBox(height: 24),
-        ...insights.map((insight) => _buildInsightCard(context, insight)),
-        const SizedBox(height: 16),
+        SizedBox(height: screenHeight * 0.03),
+        ...insights.map((insight) => _buildInsightCard(context, insight, screenWidth)),
+        SizedBox(height: screenHeight * 0.02),
         // Time breakdown
         Card(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(screenWidth * 0.04),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Spending by Time', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 12),
-                _buildTimeBar('Morning', morningSpend, maxTimeSpend, Colors.amber, currency),
-                _buildTimeBar('Afternoon', afternoonSpend, maxTimeSpend, Colors.orange, currency),
-                _buildTimeBar('Evening', eveningSpend, maxTimeSpend, Colors.deepPurple, currency),
-                _buildTimeBar('Night', nightSpend, maxTimeSpend, Colors.indigo, currency),
+                SizedBox(height: screenHeight * 0.015),
+                _buildTimeBar('Morning', morningSpend, maxTimeSpend, Colors.amber, currency, screenWidth),
+                _buildTimeBar('Afternoon', afternoonSpend, maxTimeSpend, Colors.orange, currency, screenWidth),
+                _buildTimeBar('Evening', eveningSpend, maxTimeSpend, Colors.deepPurple, currency, screenWidth),
+                _buildTimeBar('Night', nightSpend, maxTimeSpend, Colors.indigo, currency, screenWidth),
               ],
             ),
           ),
@@ -372,38 +399,47 @@ class SplitBrainInsights extends StatelessWidget {
     );
   }
 
-  Widget _buildInsightCard(BuildContext context, Map<String, dynamic> insight) {
+  Widget _buildInsightCard(BuildContext context, Map<String, dynamic> insight, double screenWidth) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: screenWidth * 0.03),
       child: ListTile(
-        leading: Text(insight['emoji'], style: const TextStyle(fontSize: 32)),
+        leading: Text(insight['emoji'], style: TextStyle(fontSize: screenWidth * 0.08)),
         title: Text(insight['title'], style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(insight['description']),
         trailing: insight['amount'].toString().isNotEmpty
-            ? Text(insight['amount'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))
+            ? Text(
+                insight['amount'], 
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenWidth * 0.04),
+              )
             : null,
       ),
     );
   }
 
-  Widget _buildTimeBar(String label, double amount, double max, Color color, String currency) {
+  Widget _buildTimeBar(String label, double amount, double max, Color color, String currency, double screenWidth) {
     final percentage = max > 0 ? (amount / max) : 0.0;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: screenWidth * 0.01),
       child: Row(
         children: [
-          SizedBox(width: 70, child: Text(label)),
+          SizedBox(width: screenWidth * 0.18, child: Text(label)),
           Expanded(
             child: LinearProgressIndicator(
               value: percentage,
               backgroundColor: Colors.grey.shade200,
               valueColor: AlwaysStoppedAnimation(color),
-              minHeight: 10,
-              borderRadius: BorderRadius.circular(5),
+              minHeight: screenWidth * 0.025,
+              borderRadius: BorderRadius.circular(screenWidth * 0.012),
             ),
           ),
-          const SizedBox(width: 8),
-          SizedBox(width: 60, child: Text('$currency${amount.toStringAsFixed(0)}', textAlign: TextAlign.right)),
+          SizedBox(width: screenWidth * 0.02),
+          SizedBox(
+            width: screenWidth * 0.15, 
+            child: Text(
+              '$currency${amount.toStringAsFixed(0)}', 
+              textAlign: TextAlign.right,
+            ),
+          ),
         ],
       ),
     );

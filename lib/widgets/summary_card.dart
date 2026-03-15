@@ -10,17 +10,27 @@ class SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final expenseProvider = Provider.of<ExpenseProvider>(context);
     final currency = Provider.of<UserProvider>(context).currency;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // Responsive values
+    final cardMargin = screenWidth * 0.04;
+    final cardPadding = screenWidth * 0.05;
+    final titleFontSize = screenWidth * 0.04;
+    final balanceFontSize = screenWidth * 0.08;
+    final indicatorFontSize = screenWidth * 0.045;
+    final iconSize = screenWidth * 0.04;
 
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.all(cardMargin),
+      padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade900],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(screenWidth * 0.06),
         boxShadow: [
           BoxShadow(
             color: Colors.deepPurple.withOpacity(0.3),
@@ -30,35 +40,49 @@ class SummaryCard extends StatelessWidget {
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Total Balance',
-            style: TextStyle(color: Colors.white70, fontSize: 16),
-          ),
-          const SizedBox(height: 8),
           Text(
-            '$currency ${expenseProvider.totalBalance.toStringAsFixed(2)}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
+            'Total Balance',
+            style: TextStyle(color: Colors.white70, fontSize: titleFontSize),
+          ),
+          SizedBox(height: screenHeight * 0.01),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '$currency ${expenseProvider.totalBalance.toStringAsFixed(2)}',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: balanceFontSize,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: screenHeight * 0.02),
           Row(
             children: [
               _buildIndicator(
+                context: context,
                 label: 'Income',
                 amount: '$currency ${expenseProvider.totalIncome.toStringAsFixed(0)}',
                 icon: Icons.arrow_upward,
                 color: Colors.greenAccent,
+                iconSize: iconSize,
+                fontSize: indicatorFontSize,
               ),
-              Container(width: 1, height: 40, color: Colors.white24),
+              Container(
+                width: 1, 
+                height: screenHeight * 0.05, 
+                color: Colors.white24,
+              ),
               _buildIndicator(
+                context: context,
                 label: 'Expense',
                 amount: '$currency ${expenseProvider.totalExpense.toStringAsFixed(0)}',
                 icon: Icons.arrow_downward,
                 color: Colors.redAccent,
+                iconSize: iconSize,
+                fontSize: indicatorFontSize,
               ),
             ],
           ),
@@ -68,29 +92,44 @@ class SummaryCard extends StatelessWidget {
   }
 
   Widget _buildIndicator({
+    required BuildContext context,
     required String label,
     required String amount,
     required IconData icon,
     required Color color,
+    required double iconSize,
+    required double fontSize,
   }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    
     return Expanded(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: color, size: 16),
-              const SizedBox(width: 4),
-              Text(label, style: const TextStyle(color: Colors.white70)),
+              Icon(icon, color: color, size: iconSize),
+              SizedBox(width: screenWidth * 0.01),
+              Text(
+                label, 
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: screenWidth * 0.035,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            amount,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
+          SizedBox(height: screenWidth * 0.01),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              amount,
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: fontSize,
+              ),
             ),
           ),
         ],
