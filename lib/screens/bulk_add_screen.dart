@@ -104,7 +104,7 @@ class _BulkAddScreenState extends State<BulkAddScreen> {
                           children: [
                             CircleAvatar(
                               radius: screenWidth * 0.04,
-                              backgroundColor: Colors.grey.shade200,
+                              backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.grey.shade200,
                               child: Text(
                                 '${index + 1}',
                                 style: TextStyle(fontSize: screenWidth * 0.035),
@@ -130,7 +130,7 @@ class _BulkAddScreenState extends State<BulkAddScreen> {
                             ),
                             IconButton(
                               onPressed: () => _removeRow(index),
-                              icon: Icon(Icons.close, color: Colors.grey, size: screenWidth * 0.05),
+                              icon: Icon(Icons.close, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.grey, size: screenWidth * 0.05),
                             )
                           ],
                         ),

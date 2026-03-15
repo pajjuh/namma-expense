@@ -30,7 +30,7 @@ class MoodSelector extends StatelessWidget {
               color: isSelected ? Theme.of(context).colorScheme.primaryContainer : Colors.transparent,
               shape: BoxShape.circle,
               border: Border.all(
-                color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey.shade300,
+                color: isSelected ? Theme.of(context).colorScheme.primary : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.grey.shade300),
                 width: 2,
               ),
             ),

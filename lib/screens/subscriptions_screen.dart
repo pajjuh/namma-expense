@@ -187,7 +187,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   Icon(
                     Icons.subscriptions_outlined, 
                     size: screenWidth * 0.16, 
-                    color: Colors.grey,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.grey,
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   const Text('No subscriptions yet'),
@@ -264,15 +264,15 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         Provider.of<SubscriptionProvider>(context, listen: false).deleteSubscription(sub.id);
       },
       child: Card(
-        color: isUpcoming ? Colors.amber.shade50 : null,
+        color: isUpcoming ? Colors.amber.withOpacity(0.15) : null,
         margin: EdgeInsets.only(bottom: screenWidth * 0.02),
         child: ListTile(
           leading: CircleAvatar(
             radius: screenWidth * 0.05,
-            backgroundColor: isUpcoming ? Colors.amber : Colors.grey.shade300,
+            backgroundColor: isUpcoming ? Colors.amber : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.grey.shade300),
             child: Icon(
               Icons.repeat, 
-              color: isUpcoming ? Colors.white : Colors.black54,
+              color: isUpcoming ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54),
               size: screenWidth * 0.05,
             ),
           ),

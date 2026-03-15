@@ -74,7 +74,9 @@ class HomeScreen extends StatelessWidget {
                       children: [
                         Text(
                           '${_getGreeting()},',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.grey,
+                          ),
                         ),
                         Text(
                           userProvider.userName.isEmpty ? 'Friend' : userProvider.userName,

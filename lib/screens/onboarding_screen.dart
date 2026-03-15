@@ -182,7 +182,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildModeCard(UserMode mode, String label, IconData icon, double screenWidth) {
     final isSelected = _selectedMode == mode;
-    final color = isSelected ? Theme.of(context).colorScheme.primary : Colors.grey.shade300;
+    final color = isSelected ? Theme.of(context).colorScheme.primary : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.grey.shade300);
     
     return Expanded(
       child: GestureDetector(
@@ -199,7 +199,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             children: [
               Icon(
                 icon, 
-                color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
+                color: isSelected ? Theme.of(context).colorScheme.primary : (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.grey),
                 size: screenWidth * 0.06,
               ),
               SizedBox(height: screenWidth * 0.02),
@@ -210,7 +210,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: screenWidth * 0.035,
-                    color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
+                    color: isSelected ? Theme.of(context).colorScheme.primary : (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.grey),
                   ),
                 ),
               ),

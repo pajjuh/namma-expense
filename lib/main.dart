@@ -40,7 +40,10 @@ class NammaExpenseApp extends StatelessWidget {
                 brightness: userProvider.isDarkTheme ? Brightness.dark : Brightness.light,
               ),
               useMaterial3: true,
-              textTheme: GoogleFonts.outfitTextTheme(),
+              textTheme: GoogleFonts.outfitTextTheme().apply(
+                bodyColor: userProvider.isDarkTheme ? Colors.white : Colors.black87,
+                displayColor: userProvider.isDarkTheme ? Colors.white : Colors.black87,
+              ),
             ),
             home: userProvider.userName.isEmpty
                 ? const OnboardingScreen()

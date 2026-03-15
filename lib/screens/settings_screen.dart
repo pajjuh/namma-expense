@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/user_provider.dart';
 import '../helpers/constants.dart';
 import '../services/backup_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -182,11 +183,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('About NammaExpense'),
             subtitle: const Text('Version 1.0.0'),
             onTap: () {
-              showAboutDialog(
+              showDialog(
                 context: context,
-                applicationName: 'NammaExpense',
-                applicationVersion: '1.0.0',
-                applicationLegalese: 'Your money, your rules.',
+                builder: (ctx) => AlertDialog(
+                  title: Row(
+                    children: [
+                      Image.asset('assets/applogo.jpg', width: screenWidth * 0.1, height: screenWidth * 0.1),
+                      SizedBox(width: screenWidth * 0.03),
+                      const Expanded(child: Text('NammaExpense v1.0.0', style: TextStyle(fontSize: 18))),
+                    ],
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Your money, your rules.'),
+                      SizedBox(height: screenHeight * 0.02),
+                      const Divider(),
+                      SizedBox(height: screenHeight * 0.01),
+                      const Text('Created by', style: TextStyle(color: Colors.grey)),
+                      const Text('Prajwal Suresh Hasilakar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      SizedBox(height: screenHeight * 0.02),
+                      const Text('Heeeyyy mate follow me 👋'),
+                      SizedBox(height: screenHeight * 0.02),
+                      FilledButton.icon(
+                        onPressed: () async {
+                          final Uri url = Uri.parse('https://www.instagram.com/pajju.ig');
+                          try {
+                            bool launched = await launchUrl(url, mode: LaunchMode.externalApplication);
+                            if (!launched) {
+                              await launchUrl(url, mode: LaunchMode.inAppBrowserView);
+                            }
+                          } catch (e) {
+                            if (ctx.mounted) {
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                const SnackBar(content: Text('Could not launch Instagram. Make sure to full Restart the app!')),
+                              );
+                            }
+                          }
+                        },
+                        icon: const Icon(FontAwesomeIcons.instagram),
+                        label: const Text('Instagram'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFE1306C), // Insta color
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Close'),
+                    ),
+                  ],
+                ),
               );
             },
           ),

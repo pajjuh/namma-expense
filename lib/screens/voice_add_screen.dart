@@ -154,7 +154,9 @@ class _VoiceAddScreenState extends State<VoiceAddScreen> {
                     Text(
                       'Say something like:\n"50 rupees for Coffee"',
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.grey,
+                      ),
                     ),
                     SizedBox(height: screenHeight * 0.05),
                     

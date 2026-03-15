@@ -102,13 +102,15 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.receipt_long_outlined, size: screenWidth * 0.18, color: Colors.grey.shade300),
+                  Icon(Icons.receipt_long_outlined, size: screenWidth * 0.18, color: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.grey.shade300),
                   SizedBox(height: screenHeight * 0.02),
                   Text(
                     _typeFilter != null || _categoryFilter != null
                         ? 'No transactions match your filters.'
                         : 'No transactions yet.',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.grey,
+                    ),
                   ),
                 ],
               ),
@@ -288,7 +290,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                                   ),
                                   subtitle: Text(
                                     '${DateFormat.MMMd().format(tx.date)} • ${cat.name}',
-                                    style: TextStyle(fontSize: screenWidth * 0.03, color: Colors.grey),
+                                    style: TextStyle(fontSize: screenWidth * 0.03, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.grey),
                                   ),
                                   trailing: Text(
                                     '${isExpense ? '-' : '+'}$currency${tx.amount.toStringAsFixed(0)}',
