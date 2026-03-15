@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/user_provider.dart';
 import '../helpers/constants.dart';
+import '../services/backup_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -143,6 +144,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             );
           }),
+          Divider(height: screenHeight * 0.04),
+
+          // Data & Backup
+          Text('Data & Backup', style: Theme.of(context).textTheme.titleMedium),
+          SizedBox(height: screenHeight * 0.01),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.blueAccent,
+                    child: Icon(Icons.upload, color: Colors.white),
+                  ),
+                  title: const Text('Export Backup'),
+                  subtitle: const Text('Save your data to a JSON file'),
+                  onTap: () => BackupService.exportData(context),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.orangeAccent,
+                    child: Icon(Icons.download, color: Colors.white),
+                  ),
+                  title: const Text('Import Backup'),
+                  subtitle: const Text('Restore data from a JSON file'),
+                  onTap: () => BackupService.importData(context),
+                ),
+              ],
+            ),
+          ),
           Divider(height: screenHeight * 0.04),
 
           // About / Version

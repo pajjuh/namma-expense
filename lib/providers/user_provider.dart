@@ -71,4 +71,48 @@ class UserProvider with ChangeNotifier {
     _dailyLimit = limit;
     notifyListeners();
   }
+
+  // --- Backup & Restore ---
+
+  Map<String, dynamic> exportSettings() {
+    return {
+      AppKeys.userName: _userName,
+      AppKeys.userCurrency: _currency,
+      AppKeys.userMode: _userMode.index,
+      AppKeys.isDarkTheme: _isDarkTheme,
+      AppKeys.dailyLimit: _dailyLimit,
+    };
+  }
+
+  Future<void> importSettings(Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    if (data.containsKey(AppKeys.userName)) {
+      _userName = data[AppKeys.userName];
+      await prefs.setString(AppKeys.userName, _userName);
+    }
+    
+    if (data.containsKey(AppKeys.userCurrency)) {
+      _currency = data[AppKeys.userCurrency];
+      await prefs.setString(AppKeys.userCurrency, _currency);
+    }
+    
+    if (data.containsKey(AppKeys.userMode)) {
+      final modeIndex = data[AppKeys.userMode];
+      _userMode = UserMode.values.length > modeIndex ? UserMode.values[modeIndex] : UserMode.student;
+      await prefs.setInt(AppKeys.userMode, _userMode.index);
+    }
+    
+    if (data.containsKey(AppKeys.isDarkTheme)) {
+      _isDarkTheme = data[AppKeys.isDarkTheme];
+      await prefs.setBool(AppKeys.isDarkTheme, _isDarkTheme);
+    }
+    
+    if (data.containsKey(AppKeys.dailyLimit)) {
+      _dailyLimit = (data[AppKeys.dailyLimit] as num).toDouble();
+      await prefs.setDouble(AppKeys.dailyLimit, _dailyLimit);
+    }
+
+    notifyListeners();
+  }
 }

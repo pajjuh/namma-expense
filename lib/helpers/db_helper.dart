@@ -110,4 +110,40 @@ CREATE TABLE subscriptions (
       whereArgs: [id],
     );
   }
+
+  // --- Backup & Restore ---
+
+  Future<void> clearAllData() async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('transactions');
+      await txn.delete('subscriptions');
+    });
+  }
+
+  Future<void> insertTransactionsBatch(List<model.Transaction> txns) async {
+    final db = await database;
+    final batch = db.batch();
+    for (var tx in txns) {
+      batch.insert(
+        'transactions',
+        tx.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
+  }
+
+  Future<void> insertSubscriptionsBatch(List<Subscription> subs) async {
+    final db = await database;
+    final batch = db.batch();
+    for (var sub in subs) {
+      batch.insert(
+        'subscriptions',
+        sub.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
+  }
 }

@@ -32,6 +32,9 @@ dependencies:
   pdf: ^3.10.4
   printing: ^5.11.1
   speech_to_text: ^7.0.0
+  share_plus: ^12.0.1
+  file_picker: ^10.3.10
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
