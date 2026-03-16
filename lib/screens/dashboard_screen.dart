@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 import 'home_screen.dart';
 import 'stats_screen.dart';
 import 'subscriptions_screen.dart';
 import 'settings_screen.dart';
 import 'add_transaction_screen.dart';
 import '../widgets/quick_add_sheet.dart';
+import '../widgets/sms_expense_dialog.dart';
+import '../providers/sms_provider.dart';
 import 'bulk_add_screen.dart';
 import 'voice_add_screen.dart';
 
@@ -35,6 +38,18 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
+    // Check for SMS expenses after the first frame renders
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkSmsExpenses();
+    });
+  }
+
+  Future<void> _checkSmsExpenses() async {
+    final smsProvider = Provider.of<SmsProvider>(context, listen: false);
+    await smsProvider.checkAndFetchSms();
+    if (smsProvider.hasPendingEntries && mounted) {
+      SmsExpenseDialog.show(context);
+    }
   }
 
   void _toggleFab() {

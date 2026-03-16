@@ -5,6 +5,7 @@ import '../providers/expense_provider.dart';
 import '../providers/user_provider.dart';
 import '../helpers/constants.dart';
 import '../models/transaction.dart' as model;
+import 'add_transaction_screen.dart';
 
 class AllTransactionsScreen extends StatefulWidget {
   const AllTransactionsScreen({super.key});
@@ -277,6 +278,14 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                                       .deleteTransaction(tx.id);
                                 },
                                 child: ListTile(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => AddTransactionScreen(existingTransaction: tx),
+                                      ),
+                                    );
+                                  },
                                   dense: true,
                                   leading: CircleAvatar(
                                     radius: screenWidth * 0.045,

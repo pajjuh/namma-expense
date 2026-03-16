@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/expense_provider.dart';
 import '../providers/user_provider.dart';
 import '../helpers/constants.dart';
+import '../screens/add_transaction_screen.dart';
 
 class TransactionList extends StatelessWidget {
   const TransactionList({super.key});
@@ -56,6 +57,14 @@ class TransactionList extends StatelessWidget {
             vertical: screenHeight * 0.007,
           ),
           child: ListTile(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AddTransactionScreen(existingTransaction: tx),
+                ),
+              );
+            },
             leading: CircleAvatar(
               radius: screenWidth * 0.05,
               backgroundColor: cat.color.withOpacity(0.2),

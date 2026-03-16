@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/expense_provider.dart';
 import 'providers/subscription_provider.dart';
+import 'providers/sms_provider.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/dashboard_screen.dart';
 
@@ -22,6 +23,7 @@ class NammaExpenseApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProvider()..loadUserData()),
         ChangeNotifierProvider(create: (_) => ExpenseProvider()..fetchTransactions()),
         ChangeNotifierProvider(create: (_) => SubscriptionProvider()..fetchSubscriptions()),
+        ChangeNotifierProvider(create: (_) => SmsProvider()),
       ],
       child: Consumer<UserProvider>(
         builder: (context, userProvider, child) {

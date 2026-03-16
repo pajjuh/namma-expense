@@ -8,7 +8,9 @@ import '../helpers/constants.dart';
 import '../widgets/mood_selector.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+  final Transaction? existingTransaction;
+
+  const AddTransactionScreen({super.key, this.existingTransaction});
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -27,6 +29,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.existingTransaction != null) {
+      final tx = widget.existingTransaction!;
+      _titleController.text = tx.title;
+      _amountController.text = tx.amount.toString();
+      _descController.text = tx.description ?? '';
+      _selectedDate = tx.date;
+      _type = tx.type;
+      _selectedCategory = tx.categoryId;
+      _selectedMood = tx.mood;
+      _selectedWallet = tx.wallet;
+    }
+  }
+
+  @override
   void dispose() {
     _titleController.dispose();
     _amountController.dispose();
@@ -37,6 +55,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   void _saveTransaction() {
     if (_formKey.currentState!.validate() && _selectedCategory != null) {
       final newTx = Transaction(
+        id: widget.existingTransaction?.id, // Keep existing ID if editing
         title: _titleController.text,
         amount: double.parse(_amountController.text),
         date: _selectedDate,
@@ -47,7 +66,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         description: _descController.text,
       );
 
-      Provider.of<ExpenseProvider>(context, listen: false).addTransaction(newTx);
+      if (widget.existingTransaction != null) {
+        Provider.of<ExpenseProvider>(context, listen: false).updateTransaction(newTx);
+      } else {
+        Provider.of<ExpenseProvider>(context, listen: false).addTransaction(newTx);
+      }
       Navigator.of(context).pop();
     } else if (_selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -78,7 +101,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Transaction')),
+      appBar: AppBar(title: Text(widget.existingTransaction != null ? 'Edit Transaction' : 'Add Transaction')),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
@@ -213,7 +236,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         child: FilledButton.icon(
                           onPressed: _saveTransaction,
                           icon: const Icon(Icons.check),
-                          label: const Text('Save Transaction'),
+                          label: Text(widget.existingTransaction != null ? 'Update Transaction' : 'Save Transaction'),
                           style: FilledButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: screenHeight * 0.018),
                           ),

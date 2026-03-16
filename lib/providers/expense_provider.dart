@@ -48,6 +48,11 @@ class ExpenseProvider with ChangeNotifier {
     await fetchTransactions(); // Refresh list
   }
 
+  Future<void> updateTransaction(Transaction txn) async {
+    await _dbHelper.updateTransaction(txn);
+    await fetchTransactions();
+  }
+
   Future<void> deleteTransaction(String id) async {
     await _dbHelper.deleteTransaction(id);
     await fetchTransactions();

@@ -68,6 +68,16 @@ CREATE TABLE subscriptions (
     );
   }
 
+  Future<void> updateTransaction(model.Transaction txn) async {
+    final db = await database;
+    await db.update(
+      'transactions',
+      txn.toMap(),
+      where: 'id = ?',
+      whereArgs: [txn.id],
+    );
+  }
+
   Future<List<model.Transaction>> getTransactions() async {
     final db = await database;
     final mapList = await db.query('transactions', orderBy: 'date DESC');
