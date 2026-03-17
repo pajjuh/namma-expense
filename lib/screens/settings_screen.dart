@@ -110,6 +110,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'You will see a warning when you exceed this limit.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
+          SwitchListTile(
+            title: const Text('Exclude Subscriptions & Recharges'),
+            subtitle: const Text('Do not let recurring/generated bills trip the daily limit warning.'),
+            value: userProvider.excludeSubsFromDailyLimit,
+            onChanged: (val) => userProvider.toggleExcludeSubs(val),
+            contentPadding: EdgeInsets.zero,
+          ),
           Divider(height: screenHeight * 0.04),
 
           // Mode Switch

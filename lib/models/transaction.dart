@@ -13,6 +13,8 @@ class Transaction {
   final Mood mood;
   final WalletType wallet;
   final String? description;
+  final TransactionOrigin origin;
+  final String? linkedGroupId;
 
   Transaction({
     String? id,
@@ -24,6 +26,8 @@ class Transaction {
     this.mood = Mood.neutral,
     this.wallet = WalletType.upi,
     this.description,
+    this.origin = TransactionOrigin.manual,
+    this.linkedGroupId,
   }) : id = id ?? uuid.v4();
 
   // Convert to Map for Database
@@ -37,7 +41,9 @@ class Transaction {
       'type': type.index, // Store as int
       'mood': mood.index, // Store as int
       'wallet': wallet.index, // Store as int
-      'description': description ?? '',
+      'description': description,
+      'origin': origin.index,
+      'linkedGroupId': linkedGroupId,
     };
   }
 
@@ -53,6 +59,8 @@ class Transaction {
       mood: Mood.values[map['mood']],
       wallet: WalletType.values[map['wallet']],
       description: map['description'],
+      origin: map.containsKey('origin') ? TransactionOrigin.values[map['origin']] : TransactionOrigin.manual,
+      linkedGroupId: map['linkedGroupId'],
     );
   }
 }

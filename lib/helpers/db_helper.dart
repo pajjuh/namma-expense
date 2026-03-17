@@ -18,9 +18,19 @@ class DBHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
+  }
+
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE transactions ADD COLUMN origin INTEGER DEFAULT 0');
+      await db.execute('ALTER TABLE transactions ADD COLUMN linkedGroupId TEXT');
+      await db.execute('ALTER TABLE subscriptions ADD COLUMN type INTEGER DEFAULT 0');
+      await db.execute('ALTER TABLE subscriptions ADD COLUMN totalDurationDays INTEGER');
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -40,7 +50,9 @@ CREATE TABLE transactions (
   type $intType,
   mood $intType,
   wallet $intType,
-  description TEXT
+  description TEXT,
+  origin $intType DEFAULT 0,
+  linkedGroupId TEXT
 )
     ''');
 
@@ -52,7 +64,9 @@ CREATE TABLE subscriptions (
   amount $doubleType,
   nextRenewalDate $textType,
   cycle $intType,
-  autoRenew $intType
+  autoRenew $intType,
+  type $intType DEFAULT 0,
+  totalDurationDays INTEGER
 )
     ''');
   }
@@ -91,6 +105,15 @@ CREATE TABLE subscriptions (
       'transactions',
       where: 'id = ?',
       whereArgs: [id],
+    );
+  }
+
+  Future<void> deleteTransactionGroup(String groupId) async {
+    final db = await database;
+    await db.delete(
+      'transactions',
+      where: 'linkedGroupId = ?',
+      whereArgs: [groupId],
     );
   }
 

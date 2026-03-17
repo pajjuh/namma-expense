@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/expense_provider.dart';
+import '../providers/subscription_provider.dart';
 import '../providers/user_provider.dart';
 import '../helpers/constants.dart';
 import '../models/transaction.dart' as model;
@@ -255,27 +256,60 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                                   child: Icon(Icons.delete, color: Colors.white, size: screenWidth * 0.06),
                                 ),
                                 confirmDismiss: (_) async {
-                                  return await showDialog(
-                                    context: context,
-                                    builder: (ctx) => AlertDialog(
-                                      title: const Text('Delete Transaction'),
-                                      content: Text('Delete "${tx.title}"?'),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.of(ctx).pop(false),
-                                          child: const Text('Cancel'),
-                                        ),
-                                        FilledButton(
-                                          onPressed: () => Navigator.of(ctx).pop(true),
-                                          child: const Text('Delete'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
+                                  if (tx.linkedGroupId != null) {
+                                    return await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text('Delete Recharge Plan?'),
+                                        content: const Text('This transaction is part of a Recharge plan. Do you want to delete just this entry, or all generated entries in this plan?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.of(ctx).pop(false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          OutlinedButton(
+                                            onPressed: () {
+                                              Provider.of<ExpenseProvider>(context, listen: false).deleteTransaction(tx.id);
+                                              Navigator.of(ctx).pop(true);
+                                            },
+                                            child: const Text('Just This'),
+                                          ),
+                                          FilledButton(
+                                            onPressed: () {
+                                              Provider.of<ExpenseProvider>(context, listen: false).deleteTransactionGroup(tx.linkedGroupId!);
+                                              Provider.of<SubscriptionProvider>(context, listen: false).deleteSubscription(tx.linkedGroupId!);
+                                              Navigator.of(ctx).pop(true);
+                                            },
+                                            child: const Text('Entire Plan'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  } else {
+                                    return await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text('Delete Transaction'),
+                                        content: Text('Delete "${tx.title}"?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.of(ctx).pop(false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          FilledButton(
+                                            onPressed: () {
+                                              Provider.of<ExpenseProvider>(context, listen: false).deleteTransaction(tx.id);
+                                              Navigator.of(ctx).pop(true);
+                                            },
+                                            child: const Text('Delete'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
                                 },
                                 onDismissed: (_) {
-                                  Provider.of<ExpenseProvider>(context, listen: false)
-                                      .deleteTransaction(tx.id);
+                                  // Deletion handled inside confirmDismiss to support complex logic
                                 },
                                 child: ListTile(
                                   onTap: () {

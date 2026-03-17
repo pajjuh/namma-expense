@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
 import '../providers/subscription_provider.dart';
+import '../providers/expense_provider.dart';
 import '../providers/user_provider.dart';
 import '../models/subscription.dart';
+import '../models/transaction.dart' as txn;
+import '../helpers/constants.dart';
 
 class SubscriptionsScreen extends StatefulWidget {
   const SubscriptionsScreen({super.key});
@@ -25,8 +29,13 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   void _showAddDialog() {
     final titleController = TextEditingController();
     final amountController = TextEditingController();
-    DateTime selectedDate = DateTime.now().add(const Duration(days: 30));
+    final daysController = TextEditingController();
+    DateTime selectedDate = DateTime.now();
     SubscriptionCycle selectedCycle = SubscriptionCycle.monthly;
+    
+    DateTime? rechargeStartDate;
+    DateTime? rechargeEndDate;
+    bool anchorIsEndDate = false;
 
     showModalBottomSheet(
       context: context,
@@ -34,125 +43,297 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
       builder: (ctx) {
         final screenWidth = MediaQuery.of(ctx).size.width;
         final screenHeight = MediaQuery.of(ctx).size.height;
-        
+        final currency = Provider.of<UserProvider>(context, listen: false).currency;
+
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Container(
-              constraints: BoxConstraints(maxHeight: screenHeight * 0.6),
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom,
-                    left: screenWidth * 0.04,
-                    right: screenWidth * 0.04,
-                    top: screenHeight * 0.02,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text('Add Subscription', style: Theme.of(context).textTheme.titleLarge),
-                      SizedBox(height: screenHeight * 0.02),
-                      TextField(
-                        controller: titleController,
-                        decoration: InputDecoration(
-                          labelText: 'Name (e.g. Netflix, Gym)',
-                          border: const OutlineInputBorder(),
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: screenWidth * 0.03,
-                            vertical: screenHeight * 0.015,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: screenHeight * 0.015),
-                      TextField(
-                        controller: amountController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: 'Amount',
-                          prefixText: '${Provider.of<UserProvider>(context, listen: false).currency} ',
-                          border: const OutlineInputBorder(),
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: screenWidth * 0.03,
-                            vertical: screenHeight * 0.015,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: screenHeight * 0.015),
-                      Row(
+            return DefaultTabController(
+              length: 2,
+              child: Container(
+                constraints: BoxConstraints(maxHeight: screenHeight * 0.8),
+                margin: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const TabBar(
+                      tabs: [
+                        Tab(text: 'Subscription'),
+                        Tab(text: 'Recharge Plan'),
+                      ],
+                    ),
+                    Expanded(
+                      child: TabBarView(
                         children: [
-                          Expanded(
-                            child: DropdownButtonFormField<SubscriptionCycle>(
-                              value: selectedCycle,
-                              decoration: InputDecoration(
-                                labelText: 'Cycle', 
-                                border: const OutlineInputBorder(),
-                                isDense: true,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: screenWidth * 0.03,
-                                  vertical: screenHeight * 0.012,
+                          // TAB 1: Subscription
+                          SingleChildScrollView(
+                            padding: EdgeInsets.all(screenWidth * 0.04),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                TextField(
+                                  controller: titleController,
+                                  decoration: const InputDecoration(labelText: 'Name (e.g. Netflix, Gym)', border: OutlineInputBorder(), isDense: true),
                                 ),
-                              ),
-                              items: SubscriptionCycle.values.map((c) {
-                                return DropdownMenuItem(value: c, child: Text(c.name.toUpperCase()));
-                              }).toList(),
-                              onChanged: (val) => setModalState(() => selectedCycle = val!),
+                                SizedBox(height: screenHeight * 0.015),
+                                TextField(
+                                  controller: amountController,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(labelText: 'Amount', prefixText: '$currency ', border: const OutlineInputBorder(), isDense: true),
+                                ),
+                                SizedBox(height: screenHeight * 0.015),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: DropdownButtonFormField<SubscriptionCycle>(
+                                        isExpanded: true,
+                                        value: selectedCycle,
+                                        decoration: const InputDecoration(labelText: 'Cycle', border: OutlineInputBorder(), isDense: true),
+                                        items: SubscriptionCycle.values.map((c) => DropdownMenuItem(value: c, child: Text(c.displayName, overflow: TextOverflow.ellipsis))).toList(),
+                                        onChanged: (val) => setModalState(() => selectedCycle = val!),
+                                      ),
+                                    ),
+                                    SizedBox(width: screenWidth * 0.03),
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: () async {
+                                          final picked = await showDatePicker(
+                                            context: context,
+                                            initialDate: selectedDate,
+                                            firstDate: DateTime.now(),
+                                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                                          );
+                                          if (picked != null) setModalState(() => selectedDate = picked);
+                                        },
+                                        child: InputDecorator(
+                                          decoration: const InputDecoration(labelText: 'Next Due', border: OutlineInputBorder(), isDense: true),
+                                          child: Text(DateFormat.yMMMd().format(selectedDate)),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: screenHeight * 0.02),
+                                FilledButton(
+                                  onPressed: () {
+                                    if (titleController.text.isNotEmpty && amountController.text.isNotEmpty) {
+                                      final sub = Subscription(
+                                        title: titleController.text,
+                                        amount: double.parse(amountController.text),
+                                        nextRenewalDate: selectedDate,
+                                        cycle: selectedCycle,
+                                      );
+                                      Provider.of<SubscriptionProvider>(context, listen: false).addSubscription(sub);
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                                  child: const Text('Add Subscription'),
+                                ),
+                              ],
                             ),
                           ),
-                          SizedBox(width: screenWidth * 0.03),
-                          Expanded(
-                            child: InkWell(
-                              onTap: () async {
-                                final picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: selectedDate,
-                                  firstDate: DateTime.now(),
-                                  lastDate: DateTime.now().add(const Duration(days: 365)),
-                                );
-                                if (picked != null) {
-                                  setModalState(() => selectedDate = picked);
-                                }
-                              },
-                              child: InputDecorator(
-                                decoration: InputDecoration(
-                                  labelText: 'Next Due', 
-                                  border: const OutlineInputBorder(),
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: screenWidth * 0.03,
-                                    vertical: screenHeight * 0.012,
-                                  ),
+                          
+                          // TAB 2: Recharge
+                          SingleChildScrollView(
+                            padding: EdgeInsets.all(screenWidth * 0.04),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                TextField(
+                                  controller: titleController,
+                                  decoration: const InputDecoration(labelText: 'Plan Name (e.g. Airtel 84 Days)', border: OutlineInputBorder(), isDense: true),
                                 ),
-                                child: Text(DateFormat.yMMMd().format(selectedDate)),
-                              ),
+                                SizedBox(height: screenHeight * 0.015),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextField(
+                                        controller: amountController,
+                                        keyboardType: TextInputType.number,
+                                        decoration: InputDecoration(labelText: 'Total Bill Amount', prefixText: '$currency ', border: const OutlineInputBorder(), isDense: true),
+                                      ),
+                                    ),
+                                    SizedBox(width: screenWidth * 0.03),
+                                    Expanded(
+                                      child: TextField(
+                                        controller: daysController,
+                                        keyboardType: TextInputType.number,
+                                        decoration: const InputDecoration(labelText: 'Total Days', border: OutlineInputBorder(), isDense: true),
+                                        onChanged: (val) {
+                                          int days = int.tryParse(val) ?? 0;
+                                          if (days > 0) {
+                                            setModalState(() {
+                                              if (anchorIsEndDate && rechargeEndDate != null) {
+                                                rechargeStartDate = rechargeEndDate!.subtract(Duration(days: days));
+                                              } else if (!anchorIsEndDate && rechargeStartDate != null) {
+                                                rechargeEndDate = rechargeStartDate!.add(Duration(days: days));
+                                              }
+                                            });
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: screenHeight * 0.015),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: () async {
+                                          final picked = await showDatePicker(
+                                            context: context,
+                                            initialDate: rechargeStartDate ?? DateTime.now(),
+                                            firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                                          );
+                                          if (picked != null) {
+                                            setModalState(() {
+                                              rechargeStartDate = picked;
+                                              anchorIsEndDate = false;
+                                              int days = int.tryParse(daysController.text) ?? 0;
+                                              if (days > 0) {
+                                                rechargeEndDate = rechargeStartDate!.add(Duration(days: days));
+                                              } else if (rechargeEndDate != null) {
+                                                int diff = rechargeEndDate!.difference(rechargeStartDate!).inDays;
+                                                daysController.text = diff > 0 ? diff.toString() : '';
+                                              }
+                                            });
+                                          }
+                                        },
+                                        child: InputDecorator(
+                                          decoration: const InputDecoration(labelText: 'Start Date', border: OutlineInputBorder(), isDense: true),
+                                          child: Text(rechargeStartDate != null ? DateFormat.yMMMd().format(rechargeStartDate!) : 'Select'),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: screenWidth * 0.03),
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: () async {
+                                          final picked = await showDatePicker(
+                                            context: context,
+                                            initialDate: rechargeEndDate ?? (rechargeStartDate?.add(const Duration(days: 28)) ?? DateTime.now()),
+                                            firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                                          );
+                                          if (picked != null) {
+                                            setModalState(() {
+                                              rechargeEndDate = picked;
+                                              anchorIsEndDate = true;
+                                              if (rechargeStartDate != null) {
+                                                int diff = rechargeEndDate!.difference(rechargeStartDate!).inDays;
+                                                daysController.text = diff > 0 ? diff.toString() : '';
+                                              } else {
+                                                int days = int.tryParse(daysController.text) ?? 0;
+                                                if (days > 0) {
+                                                  rechargeStartDate = rechargeEndDate!.subtract(Duration(days: days));
+                                                }
+                                              }
+                                            });
+                                          }
+                                        },
+                                        child: InputDecorator(
+                                          decoration: const InputDecoration(labelText: 'End Date', border: OutlineInputBorder(), isDense: true),
+                                          child: Text(rechargeEndDate != null ? DateFormat.yMMMd().format(rechargeEndDate!) : 'Select'),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: screenHeight * 0.015),
+                                DropdownButtonFormField<int>(
+                                  isExpanded: true,
+                                  value: 28,
+                                  decoration: const InputDecoration(labelText: '1 Month =', border: OutlineInputBorder(), isDense: true),
+                                  items: [20, 24, 28, 30].map((int value) {
+                                    return DropdownMenuItem<int>(
+                                      value: value,
+                                      child: Text('$value Days', overflow: TextOverflow.ellipsis),
+                                    );
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      setModalState(() {
+                                        if (val == 28 || val == 30) selectedCycle = SubscriptionCycle.monthly;
+                                      });
+                                    }
+                                  },
+                                ),
+                                SizedBox(height: screenHeight * 0.02),
+                                OutlinedButton(
+                                  onPressed: () {
+                                    if (amountController.text.isEmpty || daysController.text.isEmpty || rechargeStartDate == null) {
+                                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all fields and select dates')));
+                                      return;
+                                    }
+                                    double totalAmount = double.parse(amountController.text);
+                                    int totalDays = int.parse(daysController.text);
+                                    int cycleDays = 28; // Hardcoded for demo preview, can improve state later
+                                    int chunks = (totalDays / cycleDays).ceil();
+                                    double amtPerChunk = totalAmount / chunks;
+                                    
+                                    showDialog(context: context, builder: (c) => AlertDialog(
+                                      title: const Text('Preview Plan'),
+                                      content: Text('This recharge will create $chunks entries of $currency${amtPerChunk.toStringAsFixed(2)} starting from ${DateFormat.yMMMd().format(rechargeStartDate!)}.'),
+                                      actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('Close'))],
+                                    ));
+                                  },
+                                  child: const Text('Preview Splits'),
+                                ),
+                                SizedBox(height: screenHeight * 0.01),
+                                FilledButton(
+                                  onPressed: () {
+                                    if (titleController.text.isNotEmpty && amountController.text.isNotEmpty && daysController.text.isNotEmpty && rechargeStartDate != null) {
+                                      double totalAmount = double.parse(amountController.text);
+                                      int totalDays = int.parse(daysController.text);
+                                      int cycleDays = 28; // Using 28 fixed for now as baseline
+                                      int chunks = (totalDays / cycleDays).ceil();
+                                      double amtPerChunk = totalAmount / chunks;
+                                      
+                                      String groupId = const Uuid().v4();
+                                      
+                                      // Save Parent Record
+                                      final sub = Subscription(
+                                        id: groupId,
+                                        title: titleController.text,
+                                        amount: totalAmount,
+                                        nextRenewalDate: rechargeStartDate!, // Start date essentially
+                                        cycle: SubscriptionCycle.monthly, // generic mapping
+                                        type: SubscriptionType.prepaidRecharge,
+                                        totalDurationDays: totalDays,
+                                      );
+                                      Provider.of<SubscriptionProvider>(context, listen: false).addSubscription(sub);
+                                      
+                                      // Save Split Transactions
+                                      final expenseProvider = Provider.of<ExpenseProvider>(context, listen: false);
+                                      for (int i = 0; i < chunks; i++) {
+                                        DateTime entryDate = rechargeStartDate!.add(Duration(days: i * cycleDays));
+                                        final t = txn.Transaction(
+                                          title: titleController.text,
+                                          amount: amtPerChunk,
+                                          date: entryDate,
+                                          categoryId: 'recharge', // Generic category
+                                          type: TransactionType.expense,
+                                          origin: TransactionOrigin.rechargeSplit,
+                                          linkedGroupId: groupId,
+                                          description: '[Recharge split (${i+1}/$chunks)]',
+                                        );
+                                        expenseProvider.addTransaction(t);
+                                      }
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                                  child: const Text('Save Recharge Plan'),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: screenHeight * 0.02),
-                      FilledButton(
-                        onPressed: () {
-                          if (titleController.text.isNotEmpty && amountController.text.isNotEmpty) {
-                            final sub = Subscription(
-                              title: titleController.text,
-                              amount: double.parse(amountController.text),
-                              nextRenewalDate: selectedDate,
-                              cycle: selectedCycle,
-                            );
-                            Provider.of<SubscriptionProvider>(context, listen: false).addSubscription(sub);
-                            Navigator.pop(context);
-                          }
-                        },
-                        style: FilledButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: screenHeight * 0.015),
-                        ),
-                        child: const Text('Add Subscription'),
-                      ),
-                      SizedBox(height: screenHeight * 0.02),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -260,8 +441,37 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         padding: EdgeInsets.only(right: screenWidth * 0.04),
         child: Icon(Icons.delete, color: Colors.white, size: screenWidth * 0.06),
       ),
+      confirmDismiss: (_) async {
+        if (sub.type == SubscriptionType.prepaidRecharge) {
+          return await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Delete Recharge Plan?'),
+              content: const Text('This will delete the plan AND remove all of its auto-generated expenses from your dashboard. Proceed?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                  onPressed: () {
+                    Provider.of<SubscriptionProvider>(context, listen: false).deleteSubscription(sub.id);
+                    Provider.of<ExpenseProvider>(context, listen: false).deleteTransactionGroup(sub.id);
+                    Navigator.of(ctx).pop(true);
+                  },
+                  child: const Text('Delete All'),
+                ),
+              ],
+            ),
+          );
+        } else {
+          Provider.of<SubscriptionProvider>(context, listen: false).deleteSubscription(sub.id);
+          return true;
+        }
+      },
       onDismissed: (_) {
-        Provider.of<SubscriptionProvider>(context, listen: false).deleteSubscription(sub.id);
+        // Handled in confirmDismiss to support complex provider interactions
       },
       child: Card(
         color: isUpcoming ? Colors.amber.withOpacity(0.15) : null,
@@ -277,7 +487,11 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
             ),
           ),
           title: Text(sub.title, overflow: TextOverflow.ellipsis),
-          subtitle: Text('${sub.cycle.name} • Due: ${DateFormat.yMMMd().format(sub.nextRenewalDate)}'),
+          subtitle: Text(
+            sub.type == SubscriptionType.prepaidRecharge 
+              ? '${sub.totalDurationDays} Days Plan\nRenewal: ${DateFormat.yMMMd().format(sub.nextRenewalDate.add(Duration(days: sub.totalDurationDays ?? 0)))} • Exp: ${DateFormat.yMMMd().format(sub.nextRenewalDate.add(Duration(days: sub.totalDurationDays ?? 0)))}'
+              : '${sub.cycle.displayName} • Due: ${DateFormat.yMMMd().format(sub.nextRenewalDate)}'
+          ),
           trailing: Text(
             '$currency${sub.amount.toStringAsFixed(0)}', 
             style: const TextStyle(fontWeight: FontWeight.bold),

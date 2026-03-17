@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../helpers/constants.dart';
 import '../models/subscription.dart';
 import '../helpers/db_helper.dart';
 
@@ -11,16 +12,30 @@ class SubscriptionProvider with ChangeNotifier {
   List<Subscription> get upcomingSubscriptions {
     final now = DateTime.now();
     final nextWeek = now.add(const Duration(days: 7));
-    return _subscriptions.where((s) => s.nextRenewalDate.isBefore(nextWeek)).toList();
+    return _subscriptions.where((s) {
+      DateTime targetDate = s.nextRenewalDate;
+      if (s.type == SubscriptionType.prepaidRecharge && s.totalDurationDays != null) {
+        targetDate = s.nextRenewalDate.add(Duration(days: s.totalDurationDays!));
+      }
+      return targetDate.isBefore(nextWeek) && targetDate.isAfter(now.subtract(const Duration(days: 30)));
+    }).toList();
   }
 
   double get monthlyTotal {
     double total = 0;
     for (var sub in _subscriptions) {
-      if (sub.cycle == SubscriptionCycle.monthly) {
-        total += sub.amount;
+      if (sub.type == SubscriptionType.prepaidRecharge && sub.totalDurationDays != null && sub.totalDurationDays! > 0) {
+        total += sub.amount / (sub.totalDurationDays! / 30);
       } else {
-        total += sub.amount / 12; // Yearly divided by 12
+        if (sub.cycle == SubscriptionCycle.monthly) {
+          total += sub.amount;
+        } else if (sub.cycle == SubscriptionCycle.yearly) {
+          total += sub.amount / 12; // Yearly divided by 12
+        } else if (sub.cycle == SubscriptionCycle.quarterly) {
+          total += sub.amount / 3;  // 3 months
+        } else if (sub.cycle == SubscriptionCycle.halfYearly) {
+          total += sub.amount / 6;  // 6 months
+        }
       }
     }
     return total;

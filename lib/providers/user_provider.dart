@@ -8,6 +8,7 @@ class UserProvider with ChangeNotifier {
   UserMode _userMode = UserMode.student;
   bool _isDarkTheme = false;
   double _dailyLimit = 0.0;
+  bool _excludeSubsFromDailyLimit = false;
   bool _isLoading = true;
 
   String get userName => _userName;
@@ -15,6 +16,7 @@ class UserProvider with ChangeNotifier {
   UserMode get userMode => _userMode;
   bool get isDarkTheme => _isDarkTheme;
   double get dailyLimit => _dailyLimit;
+  bool get excludeSubsFromDailyLimit => _excludeSubsFromDailyLimit;
   bool get isLoading => _isLoading;
 
   List<Category> get categories {
@@ -41,6 +43,7 @@ class UserProvider with ChangeNotifier {
 
     _isDarkTheme = prefs.getBool(AppKeys.isDarkTheme) ?? false;
     _dailyLimit = prefs.getDouble(AppKeys.dailyLimit) ?? 0.0;
+    _excludeSubsFromDailyLimit = prefs.getBool(AppKeys.excludeSubsFromLimit) ?? false;
     
     _isLoading = false;
     notifyListeners();
@@ -72,6 +75,13 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> toggleExcludeSubs(bool exclude) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppKeys.excludeSubsFromLimit, exclude);
+    _excludeSubsFromDailyLimit = exclude;
+    notifyListeners();
+  }
+
   // --- Backup & Restore ---
 
   Map<String, dynamic> exportSettings() {
@@ -81,6 +91,7 @@ class UserProvider with ChangeNotifier {
       AppKeys.userMode: _userMode.index,
       AppKeys.isDarkTheme: _isDarkTheme,
       AppKeys.dailyLimit: _dailyLimit,
+      AppKeys.excludeSubsFromLimit: _excludeSubsFromDailyLimit,
     };
   }
 
@@ -111,6 +122,11 @@ class UserProvider with ChangeNotifier {
     if (data.containsKey(AppKeys.dailyLimit)) {
       _dailyLimit = (data[AppKeys.dailyLimit] as num).toDouble();
       await prefs.setDouble(AppKeys.dailyLimit, _dailyLimit);
+    }
+
+    if (data.containsKey(AppKeys.excludeSubsFromLimit)) {
+      _excludeSubsFromDailyLimit = data[AppKeys.excludeSubsFromLimit];
+      await prefs.setBool(AppKeys.excludeSubsFromLimit, _excludeSubsFromDailyLimit);
     }
 
     notifyListeners();

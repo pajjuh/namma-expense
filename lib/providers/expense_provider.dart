@@ -21,19 +21,28 @@ class ExpenseProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  List<Transaction> get transactions => _transactions;
+  List<Transaction> get _effectiveTransactions {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return _transactions.where((txn) {
+      final txnDate = DateTime(txn.date.year, txn.date.month, txn.date.day);
+      return !txnDate.isAfter(today);
+    }).toList();
+  }
+
+  List<Transaction> get transactions => _effectiveTransactions;
 
   List<Transaction> get recentTransactions {
-    return _transactions.take(10).toList();
+    return _effectiveTransactions.take(10).toList();
   }
 
   // --- Filtered Dashboard Logic ---
   
   List<Transaction> get _filteredTransactions {
-    if (_dashboardFilter == DashboardTimeFilter.lifetime) return _transactions;
+    if (_dashboardFilter == DashboardTimeFilter.lifetime) return _effectiveTransactions;
     
     final now = DateTime.now();
-    return _transactions.where((txn) {
+    return _effectiveTransactions.where((txn) {
       if (_dashboardFilter == DashboardTimeFilter.day) {
         return txn.date.year == now.year && txn.date.month == now.month && txn.date.day == now.day;
       } else if (_dashboardFilter == DashboardTimeFilter.week) {
@@ -77,7 +86,7 @@ class ExpenseProvider with ChangeNotifier {
   double get totalBalance {
     double income = 0.0;
     double expense = 0.0;
-    for (var txn in _transactions) {
+    for (var txn in _effectiveTransactions) {
       if (txn.type == TransactionType.income) {
         income += txn.amount;
       } else {
@@ -88,13 +97,13 @@ class ExpenseProvider with ChangeNotifier {
   }
 
   double get totalIncome {
-    return _transactions
+    return _effectiveTransactions
         .where((txn) => txn.type == TransactionType.income)
         .fold(0.0, (sum, item) => sum + item.amount);
   }
 
   double get totalExpense {
-    return _transactions
+    return _effectiveTransactions
         .where((txn) => txn.type == TransactionType.expense)
         .fold(0.0, (sum, item) => sum + item.amount);
   }
@@ -120,12 +129,17 @@ class ExpenseProvider with ChangeNotifier {
     await fetchTransactions();
   }
 
+  Future<void> deleteTransactionGroup(String groupId) async {
+    await _dbHelper.deleteTransactionGroup(groupId);
+    await fetchTransactions();
+  }
+
   // --- Statistics Logic ---
   
   // Get expense amount by Category ID
   Map<String, double> get categorySpending {
     Map<String, double> stats = {};
-    for (var txn in _transactions.where((t) => t.type == TransactionType.expense)) {
+    for (var txn in _effectiveTransactions.where((t) => t.type == TransactionType.expense)) {
       if (stats.containsKey(txn.categoryId)) {
         stats[txn.categoryId] = stats[txn.categoryId]! + txn.amount;
       } else {
@@ -138,7 +152,7 @@ class ExpenseProvider with ChangeNotifier {
   // Get spending for Heatmap (Date -> Amount)
   Map<DateTime, int> get heathMapData {
     Map<DateTime, int> data = {};
-    for (var txn in _transactions.where((t) => t.type == TransactionType.expense)) {
+    for (var txn in _effectiveTransactions.where((t) => t.type == TransactionType.expense)) {
       final dateKey = DateTime(txn.date.year, txn.date.month, txn.date.day);
       if (data.containsKey(dateKey)) {
         data[dateKey] = data[dateKey]! + txn.amount.toInt();

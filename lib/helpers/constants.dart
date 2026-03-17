@@ -13,6 +13,11 @@ enum WalletType { cash, upi, card }
 
 enum Period { daily, weekly, monthly, yearly }
 
+enum TransactionOrigin { manual, subscription, rechargeSplit }
+
+enum SubscriptionType { recurring, prepaidRecharge }
+
+
 // --- Keys for Storage ---
 class AppKeys {
   static const String userName = 'userName';
@@ -20,6 +25,7 @@ class AppKeys {
   static const String userMode = 'userMode';
   static const String isDarkTheme = 'isDarkTheme';
   static const String dailyLimit = 'dailyLimit';
+  static const String excludeSubsFromLimit = 'excludeSubsFromLimit';
   static const String walletLock = 'walletLock';
 }
 

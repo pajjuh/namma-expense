@@ -5,6 +5,7 @@ import '../providers/expense_provider.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/transaction_list.dart';
 import '../widgets/daily_limit_slider.dart';
+import '../helpers/constants.dart';
 import 'all_transactions_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -27,11 +28,17 @@ class HomeScreen extends StatelessWidget {
     // Calculate today's spending
     final today = DateTime.now();
     final todaySpending = expenseProvider.transactions
-        .where((t) =>
-            t.date.year == today.year &&
-            t.date.month == today.month &&
-            t.date.day == today.day &&
-            t.type.index == 1) // Expense
+        .where((t) {
+          bool isExpense = t.type.index == 1;
+          bool isManual = t.origin == TransactionOrigin.manual;
+          bool includeInLimit = !userProvider.excludeSubsFromDailyLimit || isManual;
+          
+          return t.date.year == today.year &&
+                 t.date.month == today.month &&
+                 t.date.day == today.day &&
+                 isExpense &&
+                 includeInLimit;
+        })
         .fold(0.0, (sum, t) => sum + t.amount);
 
     final isOverLimit = userProvider.dailyLimit > 0 && todaySpending > userProvider.dailyLimit;
