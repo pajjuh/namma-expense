@@ -3,15 +3,73 @@ import '../models/transaction.dart';
 import '../helpers/db_helper.dart';
 import '../helpers/constants.dart';
 
+enum DashboardTimeFilter { day, week, month, lifetime }
+
 class ExpenseProvider with ChangeNotifier {
   List<Transaction> _transactions = [];
   final DBHelper _dbHelper = DBHelper();
+
+  DashboardTimeFilter _dashboardFilter = DashboardTimeFilter.month;
+
+  DashboardTimeFilter get dashboardFilter => _dashboardFilter;
+
+  void setDashboardFilter(DashboardTimeFilter filter) {
+    _dashboardFilter = filter;
+    notifyListeners();
+  }
 
   List<Transaction> get transactions => _transactions;
 
   List<Transaction> get recentTransactions {
     return _transactions.take(10).toList();
   }
+
+  // --- Filtered Dashboard Logic ---
+  
+  List<Transaction> get _filteredTransactions {
+    if (_dashboardFilter == DashboardTimeFilter.lifetime) return _transactions;
+    
+    final now = DateTime.now();
+    return _transactions.where((txn) {
+      if (_dashboardFilter == DashboardTimeFilter.day) {
+        return txn.date.year == now.year && txn.date.month == now.month && txn.date.day == now.day;
+      } else if (_dashboardFilter == DashboardTimeFilter.week) {
+        // Simple 7 days window
+        final diff = now.difference(txn.date).inDays;
+        return diff >= 0 && diff < 7;
+      } else if (_dashboardFilter == DashboardTimeFilter.month) {
+        return txn.date.year == now.year && txn.date.month == now.month;
+      }
+      return true;
+    }).toList();
+  }
+
+  double get filteredBalance {
+    double income = 0.0;
+    double expense = 0.0;
+    for (var txn in _filteredTransactions) {
+      if (txn.type == TransactionType.income) {
+        income += txn.amount;
+      } else {
+        expense += txn.amount;
+      }
+    }
+    return income - expense;
+  }
+
+  double get filteredIncome {
+    return _filteredTransactions
+        .where((txn) => txn.type == TransactionType.income)
+        .fold(0.0, (sum, item) => sum + item.amount);
+  }
+
+  double get filteredExpense {
+    return _filteredTransactions
+        .where((txn) => txn.type == TransactionType.expense)
+        .fold(0.0, (sum, item) => sum + item.amount);
+  }
+
+  // --- Lifetime Totals ---
 
   double get totalBalance {
     double income = 0.0;

@@ -42,15 +42,21 @@ class SummaryCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            'Total Balance',
-            style: TextStyle(color: Colors.white70, fontSize: titleFontSize),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Total Balance',
+                style: TextStyle(color: Colors.white70, fontSize: titleFontSize),
+              ),
+              _buildFilterDropdown(context, expenseProvider),
+            ],
           ),
           SizedBox(height: screenHeight * 0.01),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              '$currency ${expenseProvider.totalBalance.toStringAsFixed(2)}',
+              '$currency ${expenseProvider.filteredBalance.toStringAsFixed(2)}',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: balanceFontSize,
@@ -64,7 +70,7 @@ class SummaryCard extends StatelessWidget {
               _buildIndicator(
                 context: context,
                 label: 'Income',
-                amount: '$currency ${expenseProvider.totalIncome.toStringAsFixed(0)}',
+                amount: '$currency ${expenseProvider.filteredIncome.toStringAsFixed(0)}',
                 icon: Icons.arrow_upward,
                 color: Colors.greenAccent,
                 iconSize: iconSize,
@@ -78,7 +84,7 @@ class SummaryCard extends StatelessWidget {
               _buildIndicator(
                 context: context,
                 label: 'Expense',
-                amount: '$currency ${expenseProvider.totalExpense.toStringAsFixed(0)}',
+                amount: '$currency ${expenseProvider.filteredExpense.toStringAsFixed(0)}',
                 icon: Icons.arrow_downward,
                 color: Colors.redAccent,
                 iconSize: iconSize,
@@ -135,5 +141,63 @@ class SummaryCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildFilterDropdown(BuildContext context, ExpenseProvider expenseProvider) {
+    return PopupMenuButton<DashboardTimeFilter>(
+      initialValue: expenseProvider.dashboardFilter,
+      onSelected: (DashboardTimeFilter filter) {
+        expenseProvider.setDashboardFilter(filter);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white24,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _getFilterLabel(expenseProvider.dashboardFilter),
+              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.arrow_drop_down, color: Colors.white, size: 16),
+          ],
+        ),
+      ),
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: DashboardTimeFilter.day,
+          child: Text('Today'),
+        ),
+        const PopupMenuItem(
+          value: DashboardTimeFilter.week,
+          child: Text('This Week (7 days)'),
+        ),
+        const PopupMenuItem(
+          value: DashboardTimeFilter.month,
+          child: Text('This Month'),
+        ),
+        const PopupMenuItem(
+          value: DashboardTimeFilter.lifetime,
+          child: Text('Lifetime'),
+        ),
+      ],
+    );
+  }
+
+  String _getFilterLabel(DashboardTimeFilter filter) {
+    switch (filter) {
+      case DashboardTimeFilter.day:
+        return 'Today';
+      case DashboardTimeFilter.week:
+        return 'Week';
+      case DashboardTimeFilter.month:
+        return 'Month';
+      case DashboardTimeFilter.lifetime:
+        return 'Lifetime';
+    }
   }
 }
