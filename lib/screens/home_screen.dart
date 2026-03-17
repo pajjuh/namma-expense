@@ -4,6 +4,7 @@ import '../providers/user_provider.dart';
 import '../providers/expense_provider.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/transaction_list.dart';
+import '../widgets/daily_limit_slider.dart';
 import 'all_transactions_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -39,25 +40,7 @@ class HomeScreen extends StatelessWidget {
       child: Scaffold(
         body: ListView(
           children: [
-            // Daily Limit Warning
-            if (isOverLimit)
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(screenWidth * 0.03),
-                color: Colors.red.shade100,
-                child: Row(
-                  children: [
-                    const Icon(Icons.warning, color: Colors.red),
-                    SizedBox(width: screenWidth * 0.02),
-                    Expanded(
-                      child: Text(
-                        '⚠️ You exceeded your daily limit of ${userProvider.currency}${userProvider.dailyLimit.toStringAsFixed(0)}!',
-                        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            // Old warning banner removed
 
             // Custom Header
             Padding(
@@ -99,8 +82,17 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             
-            // Balance Card
-            const SummaryCard(),
+            // Balance Card & Emoji Limit Slider
+            Row(
+              children: [
+                const Expanded(child: SummaryCard()),
+                if (userProvider.dailyLimit > 0)
+                  DailyLimitSlider(
+                    todaySpending: todaySpending,
+                    dailyLimit: userProvider.dailyLimit,
+                  ),
+              ],
+            ),
 
             // Recent Transactions Title
             Padding(
