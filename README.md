@@ -32,11 +32,11 @@
 *   **Voice**: `speech_to_text`
 *   **Icons**: `font_awesome_flutter`
 
-## 📸 Screenshots
-*(Add your screenshots here)*
 
 ## 📦 Installation
+Download the apk file of latest version under releases.
 
+To use the repo
 1.  Clone the repo:
     ```bash
     git clone https://github.com/yourusername/NammaExpense.git
