@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:home_widget/home_widget.dart';
 import '../models/transaction.dart';
 import '../helpers/db_helper.dart';
 import '../helpers/constants.dart';
@@ -10,11 +11,13 @@ class ExpenseProvider with ChangeNotifier {
   final DBHelper _dbHelper = DBHelper();
 
   DashboardTimeFilter _dashboardFilter = DashboardTimeFilter.month;
+  final String _appGroupId = 'NammaWidgetProvider';
 
   DashboardTimeFilter get dashboardFilter => _dashboardFilter;
 
   void setDashboardFilter(DashboardTimeFilter filter) {
     _dashboardFilter = filter;
+    _updateWidget();
     notifyListeners();
   }
 
@@ -98,6 +101,7 @@ class ExpenseProvider with ChangeNotifier {
 
   Future<void> fetchTransactions() async {
     _transactions = await _dbHelper.getTransactions();
+    _updateWidget();
     notifyListeners();
   }
 
@@ -143,5 +147,27 @@ class ExpenseProvider with ChangeNotifier {
       }
     }
     return data;
+  }
+
+  // --- Widget Integration ---
+
+  Future<void> _updateWidget() async {
+    await HomeWidget.saveWidgetData<String>('filtered_balance', filteredBalance.toStringAsFixed(0));
+    await HomeWidget.saveWidgetData<String>('filtered_income', filteredIncome.toStringAsFixed(0));
+    await HomeWidget.saveWidgetData<String>('filtered_expense', filteredExpense.toStringAsFixed(0));
+    
+    // Convert filter enum to a display string
+    String filterLabel = 'Month';
+    if (_dashboardFilter == DashboardTimeFilter.day) filterLabel = 'Today';
+    if (_dashboardFilter == DashboardTimeFilter.week) filterLabel = 'Week';
+    if (_dashboardFilter == DashboardTimeFilter.month) filterLabel = 'Month';
+    if (_dashboardFilter == DashboardTimeFilter.lifetime) filterLabel = 'Lifetime';
+    await HomeWidget.saveWidgetData<String>('current_filter', filterLabel);
+
+    await HomeWidget.updateWidget(
+      name: 'NammaWidgetProvider',
+      androidName: 'NammaWidgetProvider',
+      iOSName: 'NammaWidgetProvider',
+    );
   }
 }
