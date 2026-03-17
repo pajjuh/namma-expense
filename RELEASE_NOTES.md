@@ -1,4 +1,4 @@
-# NammaExpense v1.0.0 - The Intelligent Update 🧠
+# NammaExpense v1.1.0 - The Intelligent Update 🧠
 
 We are excited to release the first major version of **NammaExpense**! This release brings powerful, AI-inspired features to help you track your finances smarter and faster.
 

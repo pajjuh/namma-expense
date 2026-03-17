@@ -188,7 +188,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: const Text('About NammaExpense'),
-            subtitle: const Text('Version 1.0.0'),
+            subtitle: const Text('Version 1.1.0'),
             onTap: () {
               showDialog(
                 context: context,
@@ -197,7 +197,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       Image.asset('assets/applogo.jpg', width: screenWidth * 0.1, height: screenWidth * 0.1),
                       SizedBox(width: screenWidth * 0.03),
-                      const Expanded(child: Text('NammaExpense v1.0.0', style: TextStyle(fontSize: 18))),
+                      const Expanded(child: Text('NammaExpense v1.1.0', style: TextStyle(fontSize: 18))),
                     ],
                   ),
                   content: Column(
