@@ -11,6 +11,7 @@ import '../widgets/sms_expense_dialog.dart';
 import '../providers/sms_provider.dart';
 import 'bulk_add_screen.dart';
 import 'voice_add_screen.dart';
+import '../helpers/update_checker.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -38,6 +39,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      checkForUpdate(context);
+    });
     // Check for SMS expenses after the first frame renders
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkSmsExpenses();
