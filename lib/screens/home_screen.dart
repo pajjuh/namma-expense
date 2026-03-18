@@ -89,17 +89,15 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             
-            // Balance Card & Emoji Limit Slider
-            Row(
-              children: [
-                const Expanded(child: SummaryCard()),
-                if (userProvider.dailyLimit > 0)
-                  DailyLimitSlider(
-                    todaySpending: todaySpending,
-                    dailyLimit: userProvider.dailyLimit,
-                  ),
-              ],
-            ),
+            // Balance Card
+            const SummaryCard(),
+
+            // Sass-O-Meter Spending Widget
+            if (userProvider.dailyLimit > 0)
+              DailyLimitSlider(
+                todaySpending: todaySpending,
+                dailyLimit: userProvider.dailyLimit,
+              ),
 
             // Recent Transactions Title
             Padding(
