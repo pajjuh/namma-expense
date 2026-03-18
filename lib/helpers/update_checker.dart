@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pub_semver/pub_semver.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 const String _versionJsonUrl =
@@ -11,8 +10,10 @@ const String _versionJsonUrl =
 
 Future<void> checkForUpdate(BuildContext context) async {
   try {
+    // Cache-busting: append timestamp so GitHub raw never serves stale data
+    final uri = Uri.parse('$_versionJsonUrl?t=${DateTime.now().millisecondsSinceEpoch}');
     final response = await http
-        .get(Uri.parse(_versionJsonUrl))
+        .get(uri)
         .timeout(const Duration(seconds: 10));
 
     if (response.statusCode != 200) return;
@@ -30,9 +31,6 @@ Future<void> checkForUpdate(BuildContext context) async {
     final latestV = Version.parse(latestVersion);
     final minV = Version.parse(minVersion);
 
-    final prefs = await SharedPreferences.getInstance();
-    final skippedVersion = prefs.getString('skipped_version');
-
     // Force update — current version is below minimum
     if (currentV < minV) {
       if (!context.mounted) return;
@@ -40,9 +38,8 @@ Future<void> checkForUpdate(BuildContext context) async {
       return;
     }
 
-    // Optional update — newer version available
+    // Optional update — newer version available (show every app open)
     if (currentV < latestV) {
-      if (skippedVersion == latestVersion) return; // user chose to skip this
       if (!context.mounted) return;
       _showUpdateDialog(context, apkUrl, latestVersion, force: false);
     }
@@ -76,10 +73,8 @@ void _showUpdateDialog(
         actions: [
           if (!force)
             TextButton(
-              onPressed: () async {
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.setString('skipped_version', latestVersion);
-                if (ctx.mounted) Navigator.pop(ctx);
+              onPressed: () {
+                Navigator.pop(ctx);
               },
               child: const Text('Remind Me Later'),
             ),
