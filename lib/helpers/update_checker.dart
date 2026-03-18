@@ -23,6 +23,7 @@ Future<void> checkForUpdate(BuildContext context) async {
     final String latestVersion = data['latest_version'];
     final String minVersion = data['min_version'];
     final String apkUrl = data['apk_url'];
+    final String? releaseNotes = data['release_notes'];
 
     final packageInfo = await PackageInfo.fromPlatform();
     final currentVersion = packageInfo.version;
@@ -34,14 +35,14 @@ Future<void> checkForUpdate(BuildContext context) async {
     // Force update — current version is below minimum
     if (currentV < minV) {
       if (!context.mounted) return;
-      _showUpdateDialog(context, apkUrl, latestVersion, force: true);
+      _showUpdateDialog(context, apkUrl, latestVersion, releaseNotes, force: true);
       return;
     }
 
     // Optional update — newer version available (show every app open)
     if (currentV < latestV) {
       if (!context.mounted) return;
-      _showUpdateDialog(context, apkUrl, latestVersion, force: false);
+      _showUpdateDialog(context, apkUrl, latestVersion, releaseNotes, force: false);
     }
   } catch (_) {
     // Silently fail — no internet or bad JSON should not crash the app
@@ -51,7 +52,8 @@ Future<void> checkForUpdate(BuildContext context) async {
 void _showUpdateDialog(
   BuildContext context,
   String apkUrl,
-  String latestVersion, {
+  String latestVersion,
+  String? releaseNotes, {
   bool force = false,
 }) {
   showDialog(
@@ -65,10 +67,33 @@ void _showUpdateDialog(
           force ? 'Update Required ⚠️' : 'Update Available 🚀',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        content: Text(
-          force
-              ? 'A critical update (v$latestVersion) is required to continue using NammaExpense. Please update now.'
-              : 'Version $latestVersion is available! Update for the latest features and fixes.',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              force
+                  ? 'A critical update (v$latestVersion) is required to continue using NammaExpense. Please update now.'
+                  : 'Version $latestVersion is available! Update for the latest features and fixes.',
+            ),
+            if (releaseNotes != null && releaseNotes.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              const Text(
+                "What's New:",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                constraints: const BoxConstraints(maxHeight: 150),
+                child: SingleChildScrollView(
+                  child: Text(
+                    releaseNotes,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
         actions: [
           if (!force)
