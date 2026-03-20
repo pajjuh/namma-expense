@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
@@ -25,43 +26,99 @@ class _VoiceAddScreenState extends State<VoiceAddScreen> {
   String? _parsedNote;
   String? _parsedCategory;
 
+  bool _speechEnabled = false;
+  Timer? _silenceTimer;
+
   @override
   void initState() {
     super.initState();
     _speech = stt.SpeechToText();
+    _initSpeech();
+  }
+  
+  @override
+  void dispose() {
+    _silenceTimer?.cancel();
+    _speech.cancel();
+    super.dispose();
+  }
+
+  void _initSpeech() async {
+    try {
+      _speechEnabled = await _speech.initialize(
+        onStatus: (val) {
+          if (val == 'done' || val == 'notListening') {
+             _stopListening();
+          }
+        },
+        onError: (val) {
+          if (mounted) setState(() => _isListening = false);
+        },
+      );
+    } catch (e) {
+      _speechEnabled = false;
+    }
+    if (mounted) setState(() {});
+  }
+
+  void _stopListening() {
+    _silenceTimer?.cancel();
+    if (!mounted || !_isListening) return;
+    
+    setState(() => _isListening = false);
+    _speech.stop();
+    
+    if (_text.isNotEmpty && 
+        _text != 'Press the mic and say something...' && 
+        _text != 'Listening...') {
+      _parseText(_text);
+    }
+  }
+
+  void _startSilenceTimer() {
+    _silenceTimer?.cancel();
+    _silenceTimer = Timer(const Duration(seconds: 2), () {
+      _stopListening();
+    });
   }
 
   void _listen() async {
     if (!_isListening) {
-      bool available = await _speech.initialize(
-        onStatus: (val) {
-          print('onStatus: $val');
-          if (val == 'done' || val == 'notListening') {
-            setState(() => _isListening = false);
-            if (_text.isNotEmpty && _text != 'Press the mic and say something...') {
-               _parseText(_text);
-            }
+      if (!_speechEnabled) {
+        // Try to re-initialize if it failed previously
+        _initSpeech();
+        if (!_speechEnabled) return;
+      }
+      
+      // Clear previous parsed data before starting new recording
+      setState(() {
+        _isListening = true;
+        _text = "Listening...";
+        _parsedAmount = null;
+        _parsedNote = null;
+        _parsedCategory = null;
+      });
+      
+      // Start the fail-safe timer immediately in case they don't say anything
+      _startSilenceTimer();
+      
+      _speech.listen(
+        onResult: (val) {
+          if (mounted) {
+            setState(() {
+              _text = val.recognizedWords;
+              if (val.hasConfidenceRating && val.confidence > 0) {
+                _confidence = val.confidence;
+              }
+            });
+            // Reset the silence timer every time a new word is recognized
+            _startSilenceTimer();
           }
         },
-        onError: (val) => print('onError: $val'),
+        listenFor: const Duration(seconds: 30),
       );
-      if (available) {
-        setState(() {
-          _isListening = true;
-          _text = "Listening...";
-        });
-        _speech.listen(
-          onResult: (val) => setState(() {
-            _text = val.recognizedWords;
-            if (val.hasConfidenceRating && val.confidence > 0) {
-              _confidence = val.confidence;
-            }
-          }),
-        );
-      }
     } else {
-      setState(() => _isListening = false);
-      _speech.stop();
+      _stopListening();
     }
   }
 
