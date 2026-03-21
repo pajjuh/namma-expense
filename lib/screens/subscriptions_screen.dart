@@ -26,15 +26,20 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     });
   }
 
-  void _showAddDialog() {
-    final titleController = TextEditingController();
-    final amountController = TextEditingController();
-    final daysController = TextEditingController();
-    DateTime selectedDate = DateTime.now();
-    SubscriptionCycle selectedCycle = SubscriptionCycle.monthly;
+  void _showAddEditDialog({Subscription? existingSub}) {
+    final isEditing = existingSub != null;
+    final titleController = TextEditingController(text: existingSub?.title ?? '');
+    final amountController = TextEditingController(text: existingSub?.amount.toStringAsFixed(0) ?? '');
+    final daysController = TextEditingController(text: existingSub?.totalDurationDays?.toString() ?? '');
     
-    DateTime? rechargeStartDate;
-    DateTime? rechargeEndDate;
+    DateTime selectedDate = existingSub?.nextRenewalDate ?? DateTime.now();
+    SubscriptionCycle selectedCycle = existingSub?.cycle ?? SubscriptionCycle.monthly;
+    
+    DateTime? rechargeStartDate = existingSub?.type == SubscriptionType.prepaidRecharge ? existingSub?.nextRenewalDate : null;
+    DateTime? rechargeEndDate = existingSub?.type == SubscriptionType.prepaidRecharge && existingSub?.totalDurationDays != null 
+        ? existingSub!.nextRenewalDate.add(Duration(days: existingSub.totalDurationDays!)) : null; // Expiry
+        
+    int selectedCycleDays = existingSub?.cycleDays ?? 28;
     bool anchorIsEndDate = false;
 
     showModalBottomSheet(
@@ -55,10 +60,10 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const TabBar(
+                    TabBar(
                       tabs: [
-                        Tab(text: 'Subscription'),
-                        Tab(text: 'Recharge Plan'),
+                        Tab(text: isEditing && existingSub?.type == SubscriptionType.recurring ? 'Edit Subscription' : (isEditing ? 'Subscription' : 'Subscription')),
+                        Tab(text: isEditing && existingSub?.type == SubscriptionType.prepaidRecharge ? 'Edit Recharge' : (isEditing ? 'Recharge Plan' : 'Recharge Plan')),
                       ],
                     ),
                     Expanded(
@@ -118,16 +123,18 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                                   onPressed: () {
                                     if (titleController.text.isNotEmpty && amountController.text.isNotEmpty) {
                                       final sub = Subscription(
+                                        id: existingSub?.id,
                                         title: titleController.text,
                                         amount: double.parse(amountController.text),
                                         nextRenewalDate: selectedDate,
                                         cycle: selectedCycle,
+                                        type: SubscriptionType.recurring,
                                       );
                                       Provider.of<SubscriptionProvider>(context, listen: false).addSubscription(sub);
                                       Navigator.pop(context);
                                     }
                                   },
-                                  child: const Text('Add Subscription'),
+                                  child: Text(isEditing ? 'Save Changes' : 'Add Subscription'),
                                 ),
                               ],
                             ),
@@ -245,7 +252,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                                 SizedBox(height: screenHeight * 0.015),
                                 DropdownButtonFormField<int>(
                                   isExpanded: true,
-                                  value: 28,
+                                  value: selectedCycleDays,
                                   decoration: const InputDecoration(labelText: '1 Month =', border: OutlineInputBorder(), isDense: true),
                                   items: [20, 24, 28, 30].map((int value) {
                                     return DropdownMenuItem<int>(
@@ -256,6 +263,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                                   onChanged: (val) {
                                     if (val != null) {
                                       setModalState(() {
+                                        selectedCycleDays = val;
                                         if (val == 28 || val == 30) selectedCycle = SubscriptionCycle.monthly;
                                       });
                                     }
@@ -270,8 +278,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                                     }
                                     double totalAmount = double.parse(amountController.text);
                                     int totalDays = int.parse(daysController.text);
-                                    int cycleDays = 28; // Hardcoded for demo preview, can improve state later
-                                    int chunks = (totalDays / cycleDays).ceil();
+                                    int chunks = (totalDays / selectedCycleDays).ceil();
                                     double amtPerChunk = totalAmount / chunks;
                                     
                                     showDialog(context: context, builder: (c) => AlertDialog(
@@ -288,11 +295,10 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                                     if (titleController.text.isNotEmpty && amountController.text.isNotEmpty && daysController.text.isNotEmpty && rechargeStartDate != null) {
                                       double totalAmount = double.parse(amountController.text);
                                       int totalDays = int.parse(daysController.text);
-                                      int cycleDays = 28; // Using 28 fixed for now as baseline
-                                      int chunks = (totalDays / cycleDays).ceil();
+                                      int chunks = (totalDays / selectedCycleDays).ceil();
                                       double amtPerChunk = totalAmount / chunks;
                                       
-                                      String groupId = const Uuid().v4();
+                                      String groupId = existingSub?.id ?? const Uuid().v4();
                                       
                                       // Save Parent Record
                                       final sub = Subscription(
@@ -303,13 +309,19 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                                         cycle: SubscriptionCycle.monthly, // generic mapping
                                         type: SubscriptionType.prepaidRecharge,
                                         totalDurationDays: totalDays,
+                                        cycleDays: selectedCycleDays,
                                       );
                                       Provider.of<SubscriptionProvider>(context, listen: false).addSubscription(sub);
                                       
-                                      // Save Split Transactions
+                                      // If editing, clear old generated split transactions first
                                       final expenseProvider = Provider.of<ExpenseProvider>(context, listen: false);
+                                      if (isEditing) {
+                                        expenseProvider.deleteTransactionGroup(groupId);
+                                      }
+                                      
+                                      // Save Split Transactions
                                       for (int i = 0; i < chunks; i++) {
-                                        DateTime entryDate = rechargeStartDate!.add(Duration(days: i * cycleDays));
+                                        DateTime entryDate = rechargeStartDate!.add(Duration(days: i * selectedCycleDays));
                                         final t = txn.Transaction(
                                           title: titleController.text,
                                           amount: amtPerChunk,
@@ -325,7 +337,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                                       Navigator.pop(context);
                                     }
                                   },
-                                  child: const Text('Save Recharge Plan'),
+                                  child: Text(isEditing ? 'Save Changes' : 'Save Recharge Plan'),
                                 ),
                               ],
                             ),
@@ -356,7 +368,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: _showAddDialog,
+            onPressed: () => _showAddEditDialog(),
           ),
         ],
       ),
@@ -374,7 +386,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   const Text('No subscriptions yet'),
                   SizedBox(height: screenHeight * 0.01),
                   FilledButton.icon(
-                    onPressed: _showAddDialog,
+                    onPressed: () => _showAddEditDialog(),
                     icon: const Icon(Icons.add),
                     label: const Text('Add First'),
                   ),
@@ -489,15 +501,42 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
           title: Text(sub.title, overflow: TextOverflow.ellipsis),
           subtitle: Text(
             sub.type == SubscriptionType.prepaidRecharge 
-              ? '${sub.totalDurationDays} Days Plan\nRenewal: ${DateFormat.yMMMd().format(sub.nextRenewalDate.add(Duration(days: sub.totalDurationDays ?? 0)))} • Exp: ${DateFormat.yMMMd().format(sub.nextRenewalDate.add(Duration(days: sub.totalDurationDays ?? 0)))}'
+              ? '${sub.totalDurationDays} Days Plan\nRenewal: ${_calculateNextRechargeRenewal(sub)} • Exp: ${DateFormat.yMMMd().format(sub.nextRenewalDate.add(Duration(days: sub.totalDurationDays ?? 0)))}'
               : '${sub.cycle.displayName} • Due: ${DateFormat.yMMMd().format(sub.nextRenewalDate)}'
           ),
-          trailing: Text(
-            '$currency${sub.amount.toStringAsFixed(0)}', 
-            style: const TextStyle(fontWeight: FontWeight.bold),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit, size: 20),
+                onPressed: () => _showAddEditDialog(existingSub: sub),
+              ),
+              Text(
+                '$currency${sub.amount.toStringAsFixed(0)}', 
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
         ),
       ),
     );
+  }
+
+  String _calculateNextRechargeRenewal(Subscription sub) {
+    if (sub.type != SubscriptionType.prepaidRecharge) return '';
+    final cycle = sub.cycleDays ?? 28;
+    DateTime nextDate = sub.nextRenewalDate; // Start date
+    DateTime now = DateTime.now();
+    DateTime exp = sub.nextRenewalDate.add(Duration(days: sub.totalDurationDays ?? 0));
+    
+    // Find the immediate next chunk date
+    while (nextDate.isBefore(now) && nextDate.isBefore(exp)) {
+      nextDate = nextDate.add(Duration(days: cycle));
+    }
+    
+    // If we've passed expiration, next date is the expiry
+    if (nextDate.isAfter(exp)) nextDate = exp;
+    
+    return DateFormat.yMMMd().format(nextDate);
   }
 }

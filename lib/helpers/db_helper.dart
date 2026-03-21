@@ -18,7 +18,7 @@ class DBHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -30,6 +30,9 @@ class DBHelper {
       await db.execute('ALTER TABLE transactions ADD COLUMN linkedGroupId TEXT');
       await db.execute('ALTER TABLE subscriptions ADD COLUMN type INTEGER DEFAULT 0');
       await db.execute('ALTER TABLE subscriptions ADD COLUMN totalDurationDays INTEGER');
+    }
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE subscriptions ADD COLUMN cycleDays INTEGER');
     }
   }
 
@@ -66,7 +69,8 @@ CREATE TABLE subscriptions (
   cycle $intType,
   autoRenew $intType,
   type $intType DEFAULT 0,
-  totalDurationDays INTEGER
+  totalDurationDays INTEGER,
+  cycleDays INTEGER
 )
     ''');
   }

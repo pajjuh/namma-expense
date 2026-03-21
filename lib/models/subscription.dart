@@ -31,6 +31,7 @@ class Subscription {
   final bool autoRenew; // Just for info
   final SubscriptionType type;
   final int? totalDurationDays;
+  final int? cycleDays;
 
   Subscription({
     String? id,
@@ -41,6 +42,7 @@ class Subscription {
     this.autoRenew = true,
     this.type = SubscriptionType.recurring,
     this.totalDurationDays,
+    this.cycleDays,
   }) : id = id ?? uuid.v4();
 
   Map<String, dynamic> toMap() {
@@ -53,6 +55,7 @@ class Subscription {
       'autoRenew': autoRenew ? 1 : 0,
       'type': type.index,
       'totalDurationDays': totalDurationDays,
+      'cycleDays': cycleDays,
     };
   }
 
@@ -66,6 +69,7 @@ class Subscription {
       autoRenew: map['autoRenew'] == 1,
       type: map.containsKey('type') ? SubscriptionType.values[map['type']] : SubscriptionType.recurring,
       totalDurationDays: map['totalDurationDays'],
+      cycleDays: map['cycleDays'],
     );
   }
 }
