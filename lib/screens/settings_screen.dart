@@ -5,6 +5,7 @@ import '../providers/user_provider.dart';
 import '../helpers/constants.dart';
 import '../services/backup_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'manage_categories_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -119,6 +120,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           Divider(height: screenHeight * 0.04),
 
+          // Manage Categories
+          Text('Preferences', style: Theme.of(context).textTheme.titleMedium),
+          SizedBox(height: screenHeight * 0.01),
+          ListTile(
+            title: const Text('Manage Categories'),
+            subtitle: const Text('Add, edit, or delete custom categories'),
+            leading: const Icon(Icons.category),
+            trailing: const Icon(Icons.chevron_right),
+            contentPadding: EdgeInsets.zero,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ManageCategoriesScreen()),
+              );
+            },
+          ),
+          Divider(height: screenHeight * 0.04),
           // Mode Switch
           Text('User Mode', style: Theme.of(context).textTheme.titleMedium),
           SizedBox(height: screenHeight * 0.01),

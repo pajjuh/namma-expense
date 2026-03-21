@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../helpers/constants.dart';
@@ -10,6 +11,7 @@ class UserProvider with ChangeNotifier {
   double _dailyLimit = 0.0;
   bool _excludeSubsFromDailyLimit = false;
   bool _isLoading = true;
+  List<Category> _customCategories = [];
 
   String get userName => _userName;
   String get currency => _currency;
@@ -20,15 +22,22 @@ class UserProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   List<Category> get categories {
+    List<Category> base;
     switch (_userMode) {
       case UserMode.student:
-        return studentCategories;
+        base = studentCategories;
+        break;
       case UserMode.professional:
-        return professionalCategories;
+        base = professionalCategories;
+        break;
       case UserMode.homemaker:
-        return homemakerCategories;
+        base = homemakerCategories;
+        break;
     }
+    return [...base, ..._customCategories];
   }
+
+  List<Category> get customCategories => _customCategories;
 
   Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -45,7 +54,45 @@ class UserProvider with ChangeNotifier {
     _dailyLimit = prefs.getDouble(AppKeys.dailyLimit) ?? 0.0;
     _excludeSubsFromDailyLimit = prefs.getBool(AppKeys.excludeSubsFromLimit) ?? false;
     
+    final customCatsStr = prefs.getStringList('custom_categories') ?? [];
+    importCustomCategories(customCatsStr);
+    
     _isLoading = false;
+    notifyListeners();
+  }
+
+  void importCustomCategories(List<String> jsonList) {
+    try {
+      _customCategories = jsonList.map((str) => Category.fromMap(jsonDecode(str))).toList();
+    } catch (e) {
+      _customCategories = [];
+    }
+  }
+
+  Future<void> _saveCustomCategories() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = _customCategories.map((c) => jsonEncode(c.toMap())).toList();
+    await prefs.setStringList('custom_categories', jsonList);
+  }
+
+  Future<void> addCustomCategory(Category category) async {
+    _customCategories.add(category);
+    await _saveCustomCategories();
+    notifyListeners();
+  }
+
+  Future<void> updateCustomCategory(Category category) async {
+    final index = _customCategories.indexWhere((c) => c.id == category.id);
+    if (index != -1) {
+      _customCategories[index] = category;
+      await _saveCustomCategories();
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteCustomCategory(String id) async {
+    _customCategories.removeWhere((c) => c.id == id);
+    await _saveCustomCategories();
     notifyListeners();
   }
 
@@ -92,6 +139,7 @@ class UserProvider with ChangeNotifier {
       AppKeys.isDarkTheme: _isDarkTheme,
       AppKeys.dailyLimit: _dailyLimit,
       AppKeys.excludeSubsFromLimit: _excludeSubsFromDailyLimit,
+      'custom_categories': _customCategories.map((c) => jsonEncode(c.toMap())).toList(),
     };
   }
 
@@ -127,6 +175,12 @@ class UserProvider with ChangeNotifier {
     if (data.containsKey(AppKeys.excludeSubsFromLimit)) {
       _excludeSubsFromDailyLimit = data[AppKeys.excludeSubsFromLimit];
       await prefs.setBool(AppKeys.excludeSubsFromLimit, _excludeSubsFromDailyLimit);
+    }
+    
+    if (data.containsKey('custom_categories')) {
+      final list = (data['custom_categories'] as List).cast<String>();
+      importCustomCategories(list);
+      await prefs.setStringList('custom_categories', list);
     }
 
     notifyListeners();

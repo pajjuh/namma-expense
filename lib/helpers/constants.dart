@@ -36,14 +36,85 @@ class Category {
   final String name;
   final IconData icon;
   final Color color;
+  final bool isCustom;
+  final String? iconName;
 
   const Category({
     required this.id,
     required this.name,
     required this.icon,
     required this.color,
+    this.isCustom = false,
+    this.iconName,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'iconName': iconName ?? 'other',
+      'color': color.value,
+      'isCustom': isCustom,
+    };
+  }
+
+  factory Category.fromMap(Map<String, dynamic> map) {
+    return Category(
+      id: map['id'],
+      name: map['name'],
+      icon: availableIcons[map['iconName']] ?? FontAwesomeIcons.question,
+      color: Color(map['color']),
+      isCustom: map['isCustom'] ?? true,
+      iconName: map['iconName'],
+    );
+  }
 }
+
+// Map of curated icons for custom categories
+final Map<String, IconData> availableIcons = {
+  'burger': FontAwesomeIcons.burger,
+  'bus': FontAwesomeIcons.bus,
+  'book': FontAwesomeIcons.book,
+  'mobile': FontAwesomeIcons.mobile,
+  'gamepad': FontAwesomeIcons.gamepad,
+  'utensils': FontAwesomeIcons.utensils,
+  'plane': FontAwesomeIcons.plane,
+  'gasPump': FontAwesomeIcons.gasPump,
+  'fileInvoiceDollar': FontAwesomeIcons.fileInvoiceDollar,
+  'chartLine': FontAwesomeIcons.chartLine,
+  'bagShopping': FontAwesomeIcons.bagShopping,
+  'carrot': FontAwesomeIcons.carrot,
+  'lightbulb': FontAwesomeIcons.lightbulb,
+  'graduationCap': FontAwesomeIcons.graduationCap,
+  'notesMedical': FontAwesomeIcons.notesMedical,
+  'broom': FontAwesomeIcons.broom,
+  'screwdriverWrench': FontAwesomeIcons.screwdriverWrench,
+  'car': FontAwesomeIcons.car,
+  'train': FontAwesomeIcons.train,
+  'film': FontAwesomeIcons.film,
+  'music': FontAwesomeIcons.music,
+  'dog': FontAwesomeIcons.dog,
+  'cat': FontAwesomeIcons.cat,
+  'gift': FontAwesomeIcons.gift,
+  'shirt': FontAwesomeIcons.shirt,
+  'house': FontAwesomeIcons.house,
+  'basketShopping': FontAwesomeIcons.basketShopping,
+  'scissors': FontAwesomeIcons.scissors,
+  'stethoscope': FontAwesomeIcons.stethoscope,
+  'dumbbell': FontAwesomeIcons.dumbbell,
+  'mugHot': FontAwesomeIcons.mugHot,
+  'beerMugEmpty': FontAwesomeIcons.beerMugEmpty,
+  'wifi': FontAwesomeIcons.wifi,
+  'tv': FontAwesomeIcons.tv,
+  'laptop': FontAwesomeIcons.laptop,
+  'phone': FontAwesomeIcons.phone,
+  'couch': FontAwesomeIcons.couch,
+  'baby': FontAwesomeIcons.baby,
+  'planeDeparture': FontAwesomeIcons.planeDeparture,
+  'hotel': FontAwesomeIcons.hotel,
+  'camera': FontAwesomeIcons.camera,
+  'other': FontAwesomeIcons.question,
+};
 
 // Default Categories for different Modes
 
