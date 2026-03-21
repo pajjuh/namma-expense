@@ -1,43 +1,42 @@
-<<<<<<< HEAD
 # NammaExpense 💰
-> *Smart, Context-Aware Expense Tracking for Digital India*
+> *Smart, Context-Aware Expense Tracker for Digital India*
 
-**NammaExpense** (My Expense) is a modern, intuitive Flutter application designed to make personal finance management effortless. It goes beyond simple logging by offering intelligent, context-aware suggestions and deep psychological insights into your spending habits.
+**NammaExpense** (My Expense) is a modern, intuitive Flutter application designed to make personal finance management effortless. It goes far beyond standard transaction logging by offering intelligent, context-aware suggestions, custom categories, native dashboard widgets, and deep visual insights into your spending habits.
 
 ## ✨ Key Features
 
 ### 🚀 Phase 1: Core Fundamentals
-*   **Transactions**: Log Income and Expenses with ease.
-*   **Categories**: Rich set of icons and colors for distinct categories.
-*   **Modes**: Tailored profiles for **Students**, **Professionals**, and **Homemakers** with custom default categories.
-*   **Local Storage**: Secure, offline-first data using `SQLite`.
+*   **Transactions**: Log Income and Expenses cleanly with full granular control (Categories, Wallets, Mood, Date).
+*   **Customization**: Create **Custom Categories** natively with over 40 distinct icons and 20 base colors stored via local JSON without schema bloat.
+*   **Profile Modes**: Tailored environments for **Students** and **Professionals** that automatically load targeted default categories.
+*   **Local Storage**: Secure, 100% offline-first architecture using `SQLite` and `SharedPreferences`.
 
 ### 📊 Phase 2: Analytics & Limits
-*   **Visual Stats**: Interactive Pie Charts and Heatmaps to visualize spending.
-*   **Daily Limits**: Set spending caps and get visual warnings when exceeded.
-*   **Subscription Manager**: Track recurring payments (Netflix, Spotify, Rent).
-*   **Themes**: Beautiful Dark/Light mode support.
+*   **Visual Stats**: Interactive Doughnut Charts that strictly match customized category colors for immediate visual recognition.
+*   **Time Filters**: Slice data flawlessly between Daily, Weekly, and Monthly breakdowns.
+*   **Subscription & Recharge Manager**: Track recurring payments. Specially handles multi-month recharge logic strictly based on exact validity days rather than generic monthly cycles.
+*   **Android Homescreen Widget**: A dynamic, native Android widget bridging into Flutter that automatically resizes to compact 2x2 squares, horizontal 1x2 banners, or large interactive panels.
+*   **Themes**: Deeply integrated Dark, Light, and System modes following Material 3 guidelines.
 
-### 🧠 Phase 3: Advanced Intelligence
-*   **Context-Aware Quick Add**: The FAB suggests categories based on the **Time of Day** (Morning Coffee? Evening Snacks?) and **Weekend** mode.
-*   **Split Brain Insights**: A dedicated psychology tab that analyzes your spending persona (e.g., "Night Owl", "Weekend Splurger").
-*   **Bulk Add**: Add 3-5 expenses in one go – perfect for busy days.
-*   **Voice Inputs**: Just say *"100 rupees for petrol"* to add transactions instantly.
+### 🧠 Phase 3: Advanced Intelligence & Entry Streams
+*   **Context-Aware Quick Add**: Rapid-entry FAB sheet dynamically suggests the most relevant categories based strictly on the current **Time of Day** (e.g., Breakfast vs. Dinner) and **Weekend state**.
+*   **Clipboard SMS Parsing**: Instantly scans your clipboard for bank/SMS transaction strings and automatically extracts the spent amount. 
+*   **Voice Inputs**: Tap the mic and simply say *"Spent 500 on lunch"* to instantly populate a transaction via Speech-to-Text inference.
+*   **Bulk Add**: A powerful, spreadsheet-style spreadsheet interface enabling you to input numerous distinct transactions at once seamlessly.
 
 ## 🛠️ Tech Stack
 *   **Framework**: Flutter & Dart (3.9.0+)
 *   **State Management**: `Provider`
-*   **Database**: `sqflite`
+*   **Persistence**: `sqflite` (relational data) & `shared_preferences` (settings/categories config)
 *   **Charts**: `fl_chart`, `flutter_heatmap_calendar`
 *   **Voice**: `speech_to_text`
-*   **Icons**: `font_awesome_flutter`
-
+*   **Native Embeds**: Android Kotlin/XML (Widgets)
 
 ## 📦 Installation
-Download the apk file of latest version under releases.
+Download the latest APK file directly from **Releases**.
 
-To use the repo
-1.  Clone the repo:
+To run from source:
+1.  Clone the repository:
     ```bash
     git clone https://github.com/yourusername/NammaExpense.git
     ```
@@ -45,17 +44,13 @@ To use the repo
     ```bash
     flutter pub get
     ```
-3.  Run the app:
+3.  Execute (A physical device is recommended for Voice & Widget support):
     ```bash
     flutter run
     ```
 
 ## 🤝 Contributing
-Contributions are welcome! Please open an issue or submit a PR.
+Contributions are absolutely welcome! Please open an issue or submit a Pull Request.
 
 ---
 *Made with ❤️ using Flutter*
-=======
-# namma-expense
-A smart, context-aware Flutter expense tracker with voice commands, split-brain insights, and bulk add features. Built with Provider &amp; Sqflite.
->>>>>>> be9a23171128a75334313d7ddb3e3157e0e29df6
