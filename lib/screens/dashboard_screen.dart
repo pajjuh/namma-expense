@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:nammaexpense/l10n/app_localizations.dart';
 import 'home_screen.dart';
 import 'stats_screen.dart';
 import 'subscriptions_screen.dart';
@@ -100,11 +101,11 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (idx) => setState(() => _selectedIndex = idx),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.bar_chart), label: 'Stats'),
-          NavigationDestination(icon: Icon(Icons.subscriptions_outlined), selectedIcon: Icon(Icons.subscriptions), label: 'Subs'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
+        destinations: [
+          NavigationDestination(icon: const Icon(Icons.home_outlined), selectedIcon: const Icon(Icons.home), label: AppLocalizations.of(context)!.dashboard),
+          NavigationDestination(icon: const Icon(Icons.bar_chart), label: AppLocalizations.of(context)!.stats),
+          NavigationDestination(icon: const Icon(Icons.subscriptions_outlined), selectedIcon: const Icon(Icons.subscriptions), label: AppLocalizations.of(context)!.subs),
+          NavigationDestination(icon: const Icon(Icons.settings_outlined), selectedIcon: const Icon(Icons.settings), label: AppLocalizations.of(context)!.settings),
         ],
       ),
       floatingActionButton: _buildExpandableFab(),
@@ -119,28 +120,28 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         if (_isFabExpanded) ...[
           _buildFabOption(
             icon: FontAwesomeIcons.bolt,
-            label: 'Quick Add',
+            label: AppLocalizations.of(context)!.quickAdd,
             color: Colors.amber,
             onTap: () => _onFabOptionTap('quick'),
           ),
           const SizedBox(height: 16),
           _buildFabOption(
             icon: FontAwesomeIcons.penToSquare,
-            label: 'Manual Add',
+            label: AppLocalizations.of(context)!.manualAdd,
             color: Colors.blue,
             onTap: () => _onFabOptionTap('manual'),
           ),
           const SizedBox(height: 16),
           _buildFabOption(
             icon: FontAwesomeIcons.boxesStacked,
-            label: 'Bulk Add',
+            label: AppLocalizations.of(context)!.bulkAdd,
             color: Colors.purple,
             onTap: () => _onFabOptionTap('bulk'),
           ),
           const SizedBox(height: 16),
           _buildFabOption(
             icon: FontAwesomeIcons.microphone,
-            label: 'Voice Add',
+            label: AppLocalizations.of(context)!.voiceAdd,
             color: Colors.redAccent,
             onTap: () => _onFabOptionTap('voice'),
           ),

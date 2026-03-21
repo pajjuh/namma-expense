@@ -6,6 +6,8 @@ import '../helpers/constants.dart';
 import '../services/backup_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'manage_categories_screen.dart';
+import 'package:nammaexpense/l10n/app_localizations.dart';
+import '../providers/locale_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -30,7 +32,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final val = double.tryParse(_limitController.text) ?? 0.0;
     Provider.of<UserProvider>(context, listen: false).setDailyLimit(val);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Daily limit saved!')),
+      SnackBar(content: Text(AppLocalizations.of(context)!.dailyLimitSaved)),
     );
   }
 
@@ -41,7 +43,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.settings)),
       body: ListView(
         padding: EdgeInsets.all(screenWidth * 0.04),
         children: [
@@ -66,20 +68,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SizedBox(height: screenHeight * 0.03),
 
           // Theme Toggle
-          Text('Appearance', style: Theme.of(context).textTheme.titleMedium),
+          Text(AppLocalizations.of(context)!.appearance, style: Theme.of(context).textTheme.titleMedium),
           SizedBox(height: screenHeight * 0.01),
           SwitchListTile(
-            title: const Text('Dark Mode'),
-            subtitle: const Text('Enable dark theme'),
+            title: Text(AppLocalizations.of(context)!.darkMode),
+            subtitle: Text(AppLocalizations.of(context)!.enableDarkTheme),
             secondary: const Icon(Icons.dark_mode),
             value: userProvider.isDarkTheme,
             onChanged: (val) => userProvider.toggleTheme(val),
           ),
           const Divider(),
 
+          // Language Switch
+          SizedBox(height: screenHeight * 0.02),
+          Text(AppLocalizations.of(context)!.language, style: Theme.of(context).textTheme.titleMedium),
+          SizedBox(height: screenHeight * 0.01),
+          ListTile(
+            title: Text(AppLocalizations.of(context)!.language),
+            leading: const Icon(Icons.language),
+            trailing: DropdownButton<String>(
+              value: Provider.of<LocaleProvider>(context).locale?.languageCode ?? 'en',
+              items: const [
+                DropdownMenuItem(value: 'en', child: Text('English')),
+                DropdownMenuItem(value: 'kn', child: Text('ಕನ್ನಡ')),
+              ],
+              onChanged: (val) {
+                if (val != null) {
+                  Provider.of<LocaleProvider>(context, listen: false).setLocale(Locale(val));
+                }
+              },
+            ),
+          ),
+          const Divider(),
+
           // Daily Limit
           SizedBox(height: screenHeight * 0.02),
-          Text('Budget', style: Theme.of(context).textTheme.titleMedium),
+          Text(AppLocalizations.of(context)!.budget, style: Theme.of(context).textTheme.titleMedium),
           SizedBox(height: screenHeight * 0.01),
           Row(
             children: [
@@ -88,7 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   controller: _limitController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    labelText: 'Daily Spending Limit',
+                    labelText: AppLocalizations.of(context)!.dailyLimitStr,
                     prefixText: '${userProvider.currency} ',
                     border: const OutlineInputBorder(),
                     isDense: true,
@@ -102,18 +126,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               SizedBox(width: screenWidth * 0.02),
               FilledButton(
                 onPressed: _saveDailyLimit,
-                child: const Text('Save'),
+                child: Text(AppLocalizations.of(context)!.save),
               ),
             ],
           ),
           SizedBox(height: screenHeight * 0.01),
           Text(
-            'You will see a warning when you exceed this limit.',
+            AppLocalizations.of(context)!.dailyLimitWarningText,
             style: Theme.of(context).textTheme.bodySmall,
           ),
           SwitchListTile(
-            title: const Text('Exclude Subscriptions & Recharges'),
-            subtitle: const Text('Do not let recurring/generated bills trip the daily limit warning.'),
+            title: Text(AppLocalizations.of(context)!.excludeSubs),
+            subtitle: Text(AppLocalizations.of(context)!.excludeSubsDesc),
             value: userProvider.excludeSubsFromDailyLimit,
             onChanged: (val) => userProvider.toggleExcludeSubs(val),
             contentPadding: EdgeInsets.zero,
@@ -121,11 +145,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Divider(height: screenHeight * 0.04),
 
           // Manage Categories
-          Text('Preferences', style: Theme.of(context).textTheme.titleMedium),
+          Text(AppLocalizations.of(context)!.preferences, style: Theme.of(context).textTheme.titleMedium),
           SizedBox(height: screenHeight * 0.01),
           ListTile(
-            title: const Text('Manage Categories'),
-            subtitle: const Text('Add, edit, or delete custom categories'),
+            title: Text(AppLocalizations.of(context)!.manageCategories),
+            subtitle: Text(AppLocalizations.of(context)!.manageCategoriesDesc),
             leading: const Icon(Icons.category),
             trailing: const Icon(Icons.chevron_right),
             contentPadding: EdgeInsets.zero,
@@ -138,7 +162,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           Divider(height: screenHeight * 0.04),
           // Mode Switch
-          Text('User Mode', style: Theme.of(context).textTheme.titleMedium),
+          Text(AppLocalizations.of(context)!.userMode, style: Theme.of(context).textTheme.titleMedium),
           SizedBox(height: screenHeight * 0.01),
           ...UserMode.values.map((mode) {
             IconData icon;

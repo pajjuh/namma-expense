@@ -6,6 +6,7 @@ import '../providers/expense_provider.dart';
 import '../providers/user_provider.dart';
 import '../helpers/constants.dart';
 import '../widgets/mood_selector.dart';
+import 'package:nammaexpense/l10n/app_localizations.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final Transaction? existingTransaction;
@@ -74,7 +75,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       Navigator.of(context).pop();
     } else if (_selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.categoryRequired)),
       );
     }
   }
@@ -101,7 +102,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.existingTransaction != null ? 'Edit Transaction' : 'Add Transaction')),
+      appBar: AppBar(title: Text(widget.existingTransaction != null ? AppLocalizations.of(context)!.editTransaction : AppLocalizations.of(context)!.addTransaction)),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
@@ -116,9 +117,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     children: [
                       // Type Toggle
                       SegmentedButton<TransactionType>(
-                        segments: const [
-                          ButtonSegment(value: TransactionType.expense, label: Text('Expense'), icon: Icon(Icons.arrow_downward)),
-                          ButtonSegment(value: TransactionType.income, label: Text('Income'), icon: Icon(Icons.arrow_upward)),
+                        segments: [
+                          ButtonSegment(value: TransactionType.expense, label: Text(AppLocalizations.of(context)!.expense), icon: const Icon(Icons.arrow_downward)),
+                          ButtonSegment(value: TransactionType.income, label: Text(AppLocalizations.of(context)!.income), icon: const Icon(Icons.arrow_upward)),
                         ],
                         selected: {_type},
                         onSelectionChanged: (newSelection) {
@@ -136,12 +137,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         style: TextStyle(fontSize: screenWidth * 0.07, fontWeight: FontWeight.bold),
                         decoration: InputDecoration(
                           prefixText: '$currency ',
-                          labelText: 'Amount',
+                          labelText: AppLocalizations.of(context)!.amount,
                           border: const OutlineInputBorder(),
                         ),
                         validator: (val) {
-                          if (val == null || val.isEmpty) return 'Required';
-                          if (double.tryParse(val) == null) return 'Invalid Number';
+                          if (val == null || val.isEmpty) return AppLocalizations.of(context)!.requiredField;
+                          if (double.tryParse(val) == null) return AppLocalizations.of(context)!.invalidNumber;
                           return null;
                         },
                       ),
@@ -150,17 +151,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       // Title Input
                       TextFormField(
                         controller: _titleController,
-                        decoration: const InputDecoration(
-                          labelText: 'Title',
-                          hintText: 'e.g. Lunch, Salary',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)!.title,
+                          hintText: AppLocalizations.of(context)!.titleHint,
+                          border: const OutlineInputBorder(),
                         ),
-                        validator: (val) => val!.isEmpty ? 'Required' : null,
+                        validator: (val) => val!.isEmpty ? AppLocalizations.of(context)!.requiredField : null,
                       ),
                       SizedBox(height: screenHeight * 0.025),
 
                       // Category Selector
-                      Text('Category', style: Theme.of(context).textTheme.titleMedium),
+                      Text(AppLocalizations.of(context)!.category, style: Theme.of(context).textTheme.titleMedium),
                       SizedBox(height: screenHeight * 0.01),
                       Builder(
                         builder: (context) {
@@ -196,7 +197,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                               }),
                               if (showMore)
                                 ChoiceChip(
-                                  label: const Text('More...'),
+                                  label: Text(AppLocalizations.of(context)!.more),
                                   avatar: Icon(Icons.more_horiz, size: screenWidth * 0.04),
                                   selected: false,
                                   onSelected: (_) {
@@ -215,9 +216,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           Expanded(
                             child: DropdownButtonFormField<WalletType>(
                               value: _selectedWallet,
-                              decoration: const InputDecoration(
-                                labelText: 'Wallet', 
-                                border: OutlineInputBorder(),
+                              decoration: InputDecoration(
+                                labelText: AppLocalizations.of(context)!.wallet, 
+                                border: const OutlineInputBorder(),
                                 isDense: true,
                               ),
                               items: WalletType.values.map((w) {
@@ -231,9 +232,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             child: InkWell(
                               onTap: _presentDatePicker,
                               child: InputDecorator(
-                                decoration: const InputDecoration(
-                                  labelText: 'Date', 
-                                  border: OutlineInputBorder(),
+                                decoration: InputDecoration(
+                                  labelText: AppLocalizations.of(context)!.date, 
+                                  border: const OutlineInputBorder(),
                                   isDense: true,
                                 ),
                                 child: Text(DateFormat.yMMMd().format(_selectedDate)),
@@ -246,7 +247,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
                       // Mood Selector
                       if (_type == TransactionType.expense) ...[
-                        Text('How did you feel?', style: Theme.of(context).textTheme.titleMedium),
+                        Text(AppLocalizations.of(context)!.howDidYouFeel, style: Theme.of(context).textTheme.titleMedium),
                         SizedBox(height: screenHeight * 0.01),
                         MoodSelector(
                           selectedMood: _selectedMood,
@@ -264,7 +265,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         child: FilledButton.icon(
                           onPressed: _saveTransaction,
                           icon: const Icon(Icons.check),
-                          label: Text(widget.existingTransaction != null ? 'Update Transaction' : 'Save Transaction'),
+                          label: Text(widget.existingTransaction != null ? AppLocalizations.of(context)!.updateTransaction : AppLocalizations.of(context)!.saveTransaction),
                           style: FilledButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: screenHeight * 0.018),
                           ),
@@ -295,7 +296,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('All Categories', style: Theme.of(context).textTheme.titleLarge),
+                Text(AppLocalizations.of(context)!.allCategories, style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 16),
                 Expanded(
                   child: GridView.builder(

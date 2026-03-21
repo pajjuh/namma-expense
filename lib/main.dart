@@ -5,6 +5,9 @@ import 'providers/user_provider.dart';
 import 'providers/expense_provider.dart';
 import 'providers/subscription_provider.dart';
 import 'providers/sms_provider.dart';
+import 'providers/locale_provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:nammaexpense/l10n/app_localizations.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/dashboard_screen.dart';
 
@@ -24,9 +27,10 @@ class NammaExpenseApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ExpenseProvider()..fetchTransactions()),
         ChangeNotifierProvider(create: (_) => SubscriptionProvider()..fetchSubscriptions()),
         ChangeNotifierProvider(create: (_) => SmsProvider()),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
       ],
-      child: Consumer<UserProvider>(
-        builder: (context, userProvider, child) {
+      child: Consumer2<UserProvider, LocaleProvider>(
+        builder: (context, userProvider, localeProvider, child) {
           if (userProvider.isLoading) {
             return const MaterialApp(
               home: Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -36,6 +40,17 @@ class NammaExpenseApp extends StatelessWidget {
           return MaterialApp(
             title: 'NammaExpense',
             debugShowCheckedModeBanner: false,
+            locale: localeProvider.locale,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('kn'),
+            ],
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(
                 seedColor: Colors.deepPurple,

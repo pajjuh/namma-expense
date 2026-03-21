@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../providers/user_provider.dart';
 import '../helpers/constants.dart';
+import 'package:nammaexpense/l10n/app_localizations.dart';
 
 class ManageCategoriesScreen extends StatefulWidget {
   const ManageCategoriesScreen({super.key});
@@ -50,7 +51,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      isEditing ? 'Edit Category' : 'New Category',
+                      isEditing ? AppLocalizations.of(context)!.editCategory : AppLocalizations.of(context)!.newCategory,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
@@ -59,15 +60,15 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                     // Name Field
                     TextField(
                       controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Category Name',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.categoryName,
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                     SizedBox(height: screenHeight * 0.02),
                     
                     // Color Picker
-                    Text('Select Color', style: Theme.of(context).textTheme.titleMedium),
+                    Text(AppLocalizations.of(context)!.selectColor, style: Theme.of(context).textTheme.titleMedium),
                     SizedBox(height: screenHeight * 0.01),
                     SizedBox(
                       height: screenHeight * 0.06,
@@ -99,7 +100,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                     SizedBox(height: screenHeight * 0.02),
 
                     // Icon Picker
-                    Text('Select Icon', style: Theme.of(context).textTheme.titleMedium),
+                    Text(AppLocalizations.of(context)!.selectIcon, style: Theme.of(context).textTheme.titleMedium),
                     SizedBox(height: screenHeight * 0.01),
                     Container(
                       height: screenHeight * 0.25,
@@ -142,7 +143,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                     FilledButton(
                       onPressed: () {
                         if (nameController.text.trim().isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a name')));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.enterName)));
                           return;
                         }
                         
@@ -164,7 +165,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                         
                         Navigator.pop(context);
                       },
-                      child: Text(isEditing ? 'Save Changes' : 'Create Category'),
+                      child: Text(isEditing ? AppLocalizations.of(context)!.saveChanges : AppLocalizations.of(context)!.createCategory),
                     ),
                     SizedBox(height: screenHeight * 0.02),
                   ],
@@ -185,7 +186,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Categories'),
+        title: Text(AppLocalizations.of(context)!.manageCategories),
       ),
       body: ListView.builder(
         padding: EdgeInsets.all(screenWidth * 0.04),
@@ -215,17 +216,17 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                           showDialog(
                             context: context,
                             builder: (ctx) => AlertDialog(
-                              title: const Text('Delete Category'),
-                              content: const Text('Are you sure you want to delete this custom category? Transactions using this category may display incorrectly.'),
+                              title: Text(AppLocalizations.of(context)!.deleteCategory),
+                              content: Text(AppLocalizations.of(context)!.deleteCategoryWarning),
                               actions: [
-                                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                                TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.cancel)),
                                 FilledButton(
                                   style: FilledButton.styleFrom(backgroundColor: Colors.red),
                                   onPressed: () {
                                     userProvider.deleteCustomCategory(cat.id);
                                     Navigator.pop(ctx);
                                   },
-                                  child: const Text('Delete'),
+                                  child: Text(AppLocalizations.of(context)!.delete),
                                 ),
                               ],
                             ),
@@ -234,9 +235,9 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                       ),
                     ],
                   )
-                : const Tooltip(
-                    message: 'Default categories cannot be modified',
-                    child: Icon(Icons.lock_outline, color: Colors.grey),
+                : Tooltip(
+                    message: AppLocalizations.of(context)!.defaultCategoriesWarning,
+                    child: const Icon(Icons.lock_outline, color: Colors.grey),
                   ),
             ),
           );
@@ -245,7 +246,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddEditModal(context),
         icon: const Icon(Icons.add),
-        label: const Text('New Category'),
+        label: Text(AppLocalizations.of(context)!.newCategory),
       ),
     );
   }
