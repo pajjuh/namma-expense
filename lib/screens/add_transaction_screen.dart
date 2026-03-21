@@ -162,22 +162,50 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       // Category Selector
                       Text('Category', style: Theme.of(context).textTheme.titleMedium),
                       SizedBox(height: screenHeight * 0.01),
-                      Wrap(
-                        spacing: screenWidth * 0.02,
-                        runSpacing: screenHeight * 0.01,
-                        children: categories.map((cat) {
-                          final isSelected = _selectedCategory == cat.id;
-                          return ChoiceChip(
-                            label: Text(cat.name),
-                            avatar: Icon(cat.icon, size: screenWidth * 0.04),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              setState(() {
-                                _selectedCategory = selected ? cat.id : null;
-                              });
-                            },
+                      Builder(
+                        builder: (context) {
+                          final maxVisible = 7;
+                          List<Category> visibleCats = categories.take(maxVisible).toList();
+                          bool showMore = categories.length > maxVisible;
+                          
+                          if (_selectedCategory != null && !visibleCats.any((c) => c.id == _selectedCategory)) {
+                            final selectedCatObj = categories.firstWhere((c) => c.id == _selectedCategory, orElse: () => categories.first);
+                            if (visibleCats.length == maxVisible) {
+                              visibleCats[maxVisible - 1] = selectedCatObj;
+                            } else {
+                              visibleCats.add(selectedCatObj);
+                            }
+                          }
+
+                          return Wrap(
+                            spacing: screenWidth * 0.02,
+                            runSpacing: screenHeight * 0.01,
+                            children: [
+                              ...visibleCats.map((cat) {
+                                final isSelected = _selectedCategory == cat.id;
+                                return ChoiceChip(
+                                  label: Text(cat.name),
+                                  avatar: Icon(cat.icon, size: screenWidth * 0.04),
+                                  selected: isSelected,
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      _selectedCategory = selected ? cat.id : null;
+                                    });
+                                  },
+                                );
+                              }),
+                              if (showMore)
+                                ChoiceChip(
+                                  label: const Text('More...'),
+                                  avatar: Icon(Icons.more_horiz, size: screenWidth * 0.04),
+                                  selected: false,
+                                  onSelected: (_) {
+                                    _showCategoryPicker(context, categories);
+                                  },
+                                ),
+                            ],
                           );
-                        }).toList(),
+                        }
                       ),
                       SizedBox(height: screenHeight * 0.025),
 
@@ -251,6 +279,69 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           );
         },
       ),
+    );
+  }
+
+  void _showCategoryPicker(BuildContext context, List<Category> categories) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) {
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('All Categories', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 0.8,
+                    ),
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final cat = categories[index];
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedCategory = cat.id;
+                          });
+                          Navigator.pop(ctx);
+                        },
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor: cat.color.withOpacity(0.2),
+                              child: Icon(cat.icon, color: cat.color, size: 24),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              cat.name,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 12),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

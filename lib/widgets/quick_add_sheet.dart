@@ -154,20 +154,54 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
               SizedBox(height: screenHeight * 0.02),
               Text('Quick Category', style: Theme.of(context).textTheme.labelLarge),
               SizedBox(height: screenHeight * 0.01),
-              Wrap(
-                spacing: screenWidth * 0.02,
-                runSpacing: screenHeight * 0.01,
-                children: contextCategories.map((cat) {
-                  return ChoiceChip(
-                    label: Text(
-                      cat.name,
-                      style: TextStyle(fontSize: screenWidth * 0.035),
-                    ),
-                    avatar: Icon(cat.icon, size: screenWidth * 0.035),
-                    selected: _selectedCategory == cat.id,
-                    onSelected: (val) => setState(() => _selectedCategory = val ? cat.id : null),
+              Builder(
+                builder: (context) {
+                  final maxVisible = 4;
+                  List<Category> visibleCats = contextCategories.take(maxVisible).toList();
+                  
+                  // Use allCategories.length to check if we should show More
+                  final allCategoriesList = Provider.of<UserProvider>(context, listen: false).categories;
+                  bool showMore = allCategoriesList.length > visibleCats.length;
+                  
+                  if (_selectedCategory != null && !visibleCats.any((c) => c.id == _selectedCategory)) {
+                    final selectedCatObj = allCategoriesList.firstWhere(
+                      (c) => c.id == _selectedCategory, 
+                      orElse: () => allCategoriesList.first
+                    );
+                    if (visibleCats.length == maxVisible) {
+                      visibleCats[maxVisible - 1] = selectedCatObj;
+                    } else {
+                      visibleCats.add(selectedCatObj);
+                    }
+                  }
+
+                  return Wrap(
+                    spacing: screenWidth * 0.02,
+                    runSpacing: screenHeight * 0.01,
+                    children: [
+                      ...visibleCats.map((cat) {
+                        return ChoiceChip(
+                          label: Text(
+                            cat.name,
+                            style: TextStyle(fontSize: screenWidth * 0.035),
+                          ),
+                          avatar: Icon(cat.icon, size: screenWidth * 0.035),
+                          selected: _selectedCategory == cat.id,
+                          onSelected: (val) => setState(() => _selectedCategory = val ? cat.id : null),
+                        );
+                      }),
+                      if (showMore)
+                        ChoiceChip(
+                          label: Text('More...', style: TextStyle(fontSize: screenWidth * 0.035)),
+                          avatar: Icon(Icons.more_horiz, size: screenWidth * 0.035),
+                          selected: false,
+                          onSelected: (_) {
+                            _showCategoryPicker(context, allCategoriesList);
+                          },
+                        ),
+                    ],
                   );
-                }).toList(),
+                }
               ),
               SizedBox(height: screenHeight * 0.02),
               FilledButton(
@@ -184,6 +218,69 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showCategoryPicker(BuildContext context, List<Category> categories) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) {
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('All Categories', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 0.8,
+                    ),
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final cat = categories[index];
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedCategory = cat.id;
+                          });
+                          Navigator.pop(ctx);
+                        },
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundColor: cat.color.withOpacity(0.2),
+                              child: Icon(cat.icon, color: cat.color, size: 20),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              cat.name,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 11),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
