@@ -76,7 +76,7 @@ class TransactionList extends StatelessWidget {
               style: TextStyle(fontSize: screenWidth * 0.04),
             ),
             subtitle: Text(
-              DateFormat.yMMMd().format(tx.date),
+              '${DateFormat.MMMd().format(tx.date)}, ${tx.formattedTime}',
               style: TextStyle(fontSize: screenWidth * 0.032),
             ),
             trailing: Text(

@@ -596,7 +596,7 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 }
 
-// AI insights logic with extended funny responses and dynamic theming
+// Data-driven Brutal AI Insights — analyses REAL last 30 days of spending
 class SplitBrainInsights extends StatelessWidget {
   final bool isDark;
   final Color cardColor;
@@ -615,82 +615,292 @@ class SplitBrainInsights extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final transactions = Provider.of<ExpenseProvider>(context).transactions;
+    final allTransactions = Provider.of<ExpenseProvider>(context).transactions;
     final currency = Provider.of<UserProvider>(context).currency;
+    final categories = Provider.of<UserProvider>(context).categories;
 
-    if (transactions.isEmpty) return const SizedBox.shrink();
+    // Filter to last 30 days ONLY
+    final now = DateTime.now();
+    final thirtyDaysAgo = now.subtract(const Duration(days: 30));
+    final recentTxns = allTransactions.where((tx) =>
+      tx.type == TransactionType.expense &&
+      tx.date.isAfter(thirtyDaysAgo)
+    ).toList();
 
-    double morningSpend = 0, afternoonSpend = 0, eveningSpend = 0, nightSpend = 0;
-    double weekdaySpend = 0, weekendSpend = 0;
-    int weekdayCount = 0, weekendCount = 0;
-
-    for (var tx in transactions) {
-      if (tx.type.index != 1) continue; 
-      final hour = tx.date.hour;
-      final isWeekend = tx.date.weekday >= 6;
-
-      if (hour >= 6 && hour < 12) morningSpend += tx.amount;
-      else if (hour >= 12 && hour < 17) afternoonSpend += tx.amount;
-      else if (hour >= 17 && hour < 21) eveningSpend += tx.amount;
-      else nightSpend += tx.amount;
-
-      if (isWeekend) { weekendSpend += tx.amount; weekendCount++; } 
-      else { weekdaySpend += tx.amount; weekdayCount++; }
-    }
+    if (recentTxns.isEmpty) return const SizedBox.shrink();
 
     List<Map<String, dynamic>> insights = [];
-    final maxTimeSpend = [morningSpend, afternoonSpend, eveningSpend, nightSpend].reduce((a, b) => a > b ? a : b);
-    
-    // Funny Time Insights
-    if (maxTimeSpend > 0) {
-      String timeLabel = '';
-      String timeEmoji = '';
-      String timeDesc = '';
 
-      if (maxTimeSpend == morningSpend) {
-        timeLabel = 'Early Bird Bankrupt';
-        timeEmoji = '☀️';
-        timeDesc = 'You literally wake up and choose consumerism. Did you even brush your teeth before buying that? Maybe try coffee at home tomorrow instead of funding your local barista\'s new Tesla.';
-      } else if (maxTimeSpend == afternoonSpend) {
-        timeLabel = 'Afternoon Slump Shopper';
-        timeEmoji = '🌤️';
-        timeDesc = 'Ahh, the classic 2 PM urge to buy useless things to feel alive at your desk. Your boss thinks you\'re working on that spreadsheet, but we both know you\'re browsing Amazon.';
-      } else if (maxTimeSpend == eveningSpend) {
-        timeLabel = 'Twilight Treasurer';
-        timeEmoji = '🌆';
-        timeDesc = 'Sun goes down, wallet opens up. Dinner? Yes. Drinks? Obviously. Movie? Why not. You are the reason the nighttime economy is thriving, but your savings account is crying.';
+    // ─── 1. TIME-BASED ROAST (uses real tx.hour now!) ───
+    double morningSpend = 0, afternoonSpend = 0, eveningSpend = 0, nightSpend = 0;
+    for (var tx in recentTxns) {
+      final h = tx.hour;
+      if (h >= 6 && h < 12) morningSpend += tx.amount;
+      else if (h >= 12 && h < 18) afternoonSpend += tx.amount;
+      else if (h >= 18 && h < 24) eveningSpend += tx.amount;
+      else nightSpend += tx.amount;
+    }
+
+    final totalSpend = morningSpend + afternoonSpend + eveningSpend + nightSpend;
+    final timeSpends = {
+      'morning': morningSpend,
+      'afternoon': afternoonSpend, 
+      'evening': eveningSpend,
+      'night': nightSpend,
+    };
+    final topTime = timeSpends.entries.reduce((a, b) => a.value > b.value ? a : b);
+    
+    if (topTime.value > 0) {
+      final pct = ((topTime.value / totalSpend) * 100).toStringAsFixed(0);
+      final amt = topTime.value.toStringAsFixed(0);
+      
+      // Roast templates per time bucket (rotating via day-of-month for variety)
+      final dayOfMonth = now.day;
+      
+      String title, emoji, desc;
+      switch (topTime.key) {
+        case 'morning':
+          emoji = '☀️';
+          title = 'Early Bird Bankrupt';
+          final morningRoasts = [
+            'You spent $currency$amt before noon this month. Productivity? No. Consumer activity? Elite.',
+            'Breakfast was supposed to be light. Your wallet disagrees. $currency$amt gone by noon ($pct% of all spending).',
+            'Your day starts with spending. Bold strategy. $currency$amt in morning hours this month.',
+          ];
+          desc = morningRoasts[dayOfMonth % morningRoasts.length];
+          break;
+        case 'afternoon':
+          emoji = '🌤️';
+          title = 'Afternoon Slump Shopper';
+          final afternoonRoasts = [
+            '$currency$amt vanished between lunch and "just one quick break". That\'s $pct% of your spending.',
+            'You call it a small purchase. Your bank calls it a pattern. $currency$amt in afternoon spending.',
+            'Afternoons: where budgets go to take naps. $currency$amt this month, $pct% of total.',
+          ];
+          desc = afternoonRoasts[dayOfMonth % afternoonRoasts.length];
+          break;
+        case 'evening':
+          emoji = '🌆';
+          title = 'Evening Wallet Emptier';
+          final eveningRoasts = [
+            'You blew $currency$amt this month in the evenings. Your night self is financially unsupervised.',
+            'Peak spending hours detected. Self-control not found. $currency$amt ($pct%) after 6 PM.',
+            'You + evenings = "add to cart" speedrun. $currency$amt in evening transactions.',
+          ];
+          desc = eveningRoasts[dayOfMonth % eveningRoasts.length];
+          break;
+        default:
+          emoji = '🌙';
+          title = 'Midnight Mistake Maker';
+          final nightRoasts = [
+            '$currency$amt between midnight and 6 AM? That wasn\'t spending. That was a cry for help.',
+            'Nothing good happens after midnight. Except your transactions apparently. $currency$amt worth.',
+            'Sleep was an option. You chose spending. $currency$amt in late-night purchases this month.',
+          ];
+          desc = nightRoasts[dayOfMonth % nightRoasts.length];
+      }
+      
+      insights.add({
+        'title': title,
+        'emoji': emoji,
+        'desc': desc,
+        'amt': '$currency$amt',
+      });
+    }
+
+    // ─── 2. TOP CATEGORY ROAST ───
+    Map<String, double> catTotals = {};
+    for (var tx in recentTxns) {
+      catTotals[tx.categoryId] = (catTotals[tx.categoryId] ?? 0) + tx.amount;
+    }
+    if (catTotals.isNotEmpty) {
+      final topCat = catTotals.entries.reduce((a, b) => a.value > b.value ? a : b);
+      final catAmt = topCat.value.toStringAsFixed(0);
+      
+      // Find category name
+      String catName = topCat.key;
+      try {
+        catName = categories.firstWhere((c) => c.id == topCat.key).name;
+      } catch (_) {}
+
+      final catLower = catName.toLowerCase();
+      String catDesc;
+      
+      // Category-specific roasts
+      if (catLower.contains('food') || catLower.contains('dinner') || catLower.contains('lunch') || catLower.contains('grocery') || catLower.contains('restaurant')) {
+        final foodRoasts = [
+          'You spent $currency$catAmt on $catName in 30 days. At this point, you\'re funding restaurants emotionally.',
+          '$currency$catAmt on $catName. Your diet plan is strong. Your spending plan is not.',
+          'Groceries? No. Gourmet lifestyle. $currency$catAmt on $catName this month.',
+        ];
+        catDesc = foodRoasts[now.day % foodRoasts.length];
+      } else if (catLower.contains('shop') || catLower.contains('cloth') || catLower.contains('fashion')) {
+        final shopRoasts = [
+          '$currency$catAmt on $catName. Was it a need or a personality upgrade?',
+          'You don\'t buy things. You adopt them. $currency$catAmt on $catName this month.',
+          'Retail therapy is working. For the stores. $currency$catAmt on $catName.',
+        ];
+        catDesc = shopRoasts[now.day % shopRoasts.length];
+      } else if (catLower.contains('transport') || catLower.contains('fuel') || catLower.contains('auto') || catLower.contains('uber') || catLower.contains('commute')) {
+        final transRoasts = [
+          '$currency$catAmt on $catName. You\'re commuting to financial instability.',
+          'At this rate, buying the vehicle might\'ve been cheaper. $currency$catAmt on $catName.',
+        ];
+        catDesc = transRoasts[now.day % transRoasts.length];
       } else {
-        timeLabel = 'Midnight Mistake Maker';
-        timeEmoji = '🌙';
-        timeDesc = 'Nothing good happens after 2 AM, especially on your credit card statement. Go to sleep! Stop buying weird gadgets from Instagram ads that you\'ll never use!';
+        final genericRoasts = [
+          'Your top category is $catName at $currency$catAmt. At least you\'re consistent… consistently broke.',
+          'If spending was a sport, $catName would be your championship event. $currency$catAmt this month.',
+          'You and $catName? That\'s not a phase. That\'s a lifestyle. $currency$catAmt in 30 days.',
+        ];
+        catDesc = genericRoasts[now.day % genericRoasts.length];
       }
 
       insights.add({
-        'title': timeLabel, 
-        'emoji': timeEmoji,
-        'desc': timeDesc,
-        'amt': '$currency${maxTimeSpend.toStringAsFixed(0)}',
+        'title': '🏆 Top Category: $catName',
+        'emoji': '💸',
+        'desc': catDesc,
+        'amt': '$currency$catAmt',
       });
     }
 
-    // Funny Weekend Insights
+    // ─── 3. SPENDING STREAK ───
+    Set<String> spendingDays = {};
+    for (var tx in recentTxns) {
+      spendingDays.add('${tx.date.year}-${tx.date.month}-${tx.date.day}');
+    }
+    // Count consecutive days ending today/yesterday
+    int streak = 0;
+    DateTime checkDate = DateTime(now.year, now.month, now.day);
+    while (spendingDays.contains('${checkDate.year}-${checkDate.month}-${checkDate.day}')) {
+      streak++;
+      checkDate = checkDate.subtract(const Duration(days: 1));
+    }
+
+    if (streak >= 3) {
+      final streakRoasts = [
+        'You\'ve spent money $streak days in a row. Impressive. Terrifying. But impressive.',
+        'Day $streak of continuous spending. Your wallet hasn\'t seen peace.',
+        'You\'re on a $streak-day spending streak. Athletes train less consistently.',
+      ];
+      insights.add({
+        'title': '🔥 $streak-Day Spending Streak',
+        'emoji': '🔥',
+        'desc': streakRoasts[now.day % streakRoasts.length],
+        'amt': '',
+      });
+    }
+
+    // ─── 4. BIG SPENDER ALERT ───
+    if (recentTxns.isNotEmpty) {
+      final biggestTx = recentTxns.reduce((a, b) => a.amount > b.amount ? a : b);
+      final bigAmt = biggestTx.amount.toStringAsFixed(0);
+      
+      // Only show if the single transaction is significant (> 20% of total)
+      if (biggestTx.amount > totalSpend * 0.15 && biggestTx.amount > 100) {
+        final bigRoasts = [
+          '$currency$bigAmt in one shot on "${biggestTx.title}". That wasn\'t spending. That was a financial plot twist.',
+          'You didn\'t "buy" ${biggestTx.title}. You made a statement. $currency$bigAmt worth.',
+          'Biggest hit this month: $currency$bigAmt on "${biggestTx.title}" at ${biggestTx.formattedTime}. Peak decision-making right there.',
+        ];
+        insights.add({
+          'title': '🚨 Big Spender Alert',
+          'emoji': '🚨',
+          'desc': bigRoasts[now.day % bigRoasts.length],
+          'amt': '$currency$bigAmt',
+        });
+      }
+    }
+
+    // ─── 5. WEEKEND vs WEEKDAY ───
+    double weekdaySpend = 0, weekendSpend = 0;
+    int weekdayCount = 0, weekendCount = 0;
+    for (var tx in recentTxns) {
+      if (tx.date.weekday >= 6) {
+        weekendSpend += tx.amount;
+        weekendCount++;
+      } else {
+        weekdaySpend += tx.amount;
+        weekdayCount++;
+      }
+    }
     final avgWeekday = weekdayCount > 0 ? weekdaySpend / weekdayCount : 0;
     final avgWeekend = weekendCount > 0 ? weekendSpend / weekendCount : 0;
-    
-    if (avgWeekend > avgWeekday * 1.5) {
+
+    if (avgWeekend > avgWeekday * 1.5 && weekendCount > 2) {
+      final pctHigher = ((avgWeekend / (avgWeekday == 0 ? 1 : avgWeekday)) * 100).toStringAsFixed(0);
       insights.add({
         'title': 'Weekend Warrior (of Debt)',
         'emoji': '🎉',
-        'desc': 'You\'re practically a monk from Monday to Friday, but come Saturday you spend money like a tech CEO on a yacht. Your weekend spending is ${((avgWeekend / (avgWeekday == 0 ? 1 : avgWeekday)) * 100).toStringAsFixed(0)}% violently higher.',
+        'desc': 'Monday-Friday you\'re a monk. Saturday? Tech CEO on a yacht. Weekend spending is $pctHigher% higher per transaction. Total weekend damage: $currency${weekendSpend.toStringAsFixed(0)}.',
         'amt': '',
       });
-    } else if (avgWeekday > avgWeekend * 1.5) {
+    } else if (avgWeekday > avgWeekend * 1.5 && weekdayCount > 5) {
       insights.add({
         'title': 'Corporate Capitalist',
         'emoji': '💼',
-        'desc': 'Are you paying to go to work? You spend way more during the week than on weekends. Try packing a lunch before you accidentally buy the whole food court.',
+        'desc': 'Are you paying to go to work? You spend way more on weekdays ($currency${weekdaySpend.toStringAsFixed(0)}) than weekends ($currency${weekendSpend.toStringAsFixed(0)}). Try packing a lunch.',
         'amt': '',
       });
+    }
+
+    // ─── 6. MONTHLY TOTAL SUMMARY ───
+    if (totalSpend > 0) {
+      final summaryRoasts = [
+        'This month you spent $currency${totalSpend.toStringAsFixed(0)}. Memories were made. Savings were not.',
+        'Monthly total: $currency${totalSpend.toStringAsFixed(0)}. Your wallet would like a word.',
+        'You earned money. Then you released it back into the wild. $currency${totalSpend.toStringAsFixed(0)} gone.',
+      ];
+      insights.add({
+        'title': '📊 30-Day Damage Report',
+        'emoji': '📊',
+        'desc': summaryRoasts[now.day % summaryRoasts.length],
+        'amt': '$currency${totalSpend.toStringAsFixed(0)}',
+      });
+    }
+
+    // ─── 7. SELF-AWARENESS ROAST (rare, savage — 5% tone) ───
+    // Only show on specific days for rarity
+    if (now.day % 7 == 0 && recentTxns.length > 10) {
+      final savageRoasts = [
+        'You opened this app for insights. Here\'s one: stop.',
+        'Tracking expenses doesn\'t reduce them. Evidence: you.',
+        'At this point, your budget is just a suggestion document.',
+        'You\'re not bad with money. You\'re just… creatively irresponsible.',
+        'You\'re not tracking money. You\'re documenting chaos.',
+      ];
+      insights.add({
+        'title': '🧠 Self-Awareness Check',
+        'emoji': '🧠',
+        'desc': savageRoasts[(now.day + now.month) % savageRoasts.length],
+        'amt': '',
+      });
+    }
+
+    // ─── 8. SMART COMBO ROAST (mix time + category) ───
+    if (catTotals.isNotEmpty && topTime.value > 0) {
+      final topCatEntry = catTotals.entries.reduce((a, b) => a.value > b.value ? a : b);
+      String topCatName = topCatEntry.key;
+      try {
+        topCatName = categories.firstWhere((c) => c.id == topCatEntry.key).name;
+      } catch (_) {}
+
+      final timeLabel = {
+        'morning': 'mornings (6 AM - 12 PM)',
+        'afternoon': 'afternoons (12 - 6 PM)',
+        'evening': 'evenings (6 PM - 12 AM)',
+        'night': 'late nights (12 - 6 AM)',
+      }[topTime.key]!;
+
+      // Only show if there's an interesting combo (not on same day as self-awareness)
+      if (now.day % 7 != 0 && now.day % 3 == 0) {
+        insights.add({
+          'title': '🧩 Pattern Detected',
+          'emoji': '🧩',
+          'desc': 'You spent $currency${topCatEntry.value.toStringAsFixed(0)} on $topCatName mostly during $timeLabel. That\'s not a habit. That\'s a ritual.',
+          'amt': '',
+        });
+      }
     }
 
     if (insights.isEmpty) return const SizedBox.shrink();
@@ -700,7 +910,7 @@ class SplitBrainInsights extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text('🧠', style: TextStyle(fontSize: 24)),
+            const Text('🧠', style: TextStyle(fontSize: 24)),
             const SizedBox(width: 8),
             Text('Brutal AI Insights', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
           ],

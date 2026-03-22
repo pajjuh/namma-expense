@@ -18,7 +18,7 @@ class DBHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -33,6 +33,9 @@ class DBHelper {
     }
     if (oldVersion < 3) {
       await db.execute('ALTER TABLE subscriptions ADD COLUMN cycleDays INTEGER');
+    }
+    if (oldVersion < 4) {
+      await db.execute("ALTER TABLE transactions ADD COLUMN time TEXT DEFAULT '00:00'");
     }
   }
 
@@ -49,6 +52,7 @@ CREATE TABLE transactions (
   title $textType,
   amount $doubleType,
   date $textType,
+  time TEXT DEFAULT '00:00',
   categoryId $textType,
   type $intType,
   mood $intType,

@@ -5,6 +5,7 @@ import '../providers/expense_provider.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/transaction_list.dart';
 import '../widgets/daily_limit_slider.dart';
+import '../widgets/floating_insight_bubble.dart';
 import '../helpers/constants.dart';
 import 'all_transactions_screen.dart';
 
@@ -88,6 +89,9 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
+
+            // Floating Cruel Insight Bubble
+            const FloatingInsightBubble(),
             
             // Balance Card
             const SummaryCard(),

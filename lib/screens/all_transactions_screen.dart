@@ -332,7 +332,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                                     style: TextStyle(fontSize: screenWidth * 0.037),
                                   ),
                                   subtitle: Text(
-                                    '${DateFormat.MMMd().format(tx.date)} • ${cat.name}',
+                                    '${DateFormat.MMMd().format(tx.date)}, ${tx.formattedTime} • ${cat.name}',
                                     style: TextStyle(fontSize: screenWidth * 0.03, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.grey),
                                   ),
                                   trailing: Text(

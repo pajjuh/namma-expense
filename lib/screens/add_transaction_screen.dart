@@ -22,6 +22,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _amountController = TextEditingController();
   final _descController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
   TransactionType _type = TransactionType.expense;
   String? _selectedCategory;
   Mood _selectedMood = Mood.neutral;
@@ -38,6 +39,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _amountController.text = tx.amount.toString();
       _descController.text = tx.description ?? '';
       _selectedDate = tx.date;
+      _selectedTime = tx.timeOfDay;
       _type = tx.type;
       _selectedCategory = tx.categoryId;
       _selectedMood = tx.mood;
@@ -60,6 +62,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         title: _titleController.text,
         amount: double.parse(_amountController.text),
         date: _selectedDate,
+        time: '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}',
         categoryId: _selectedCategory!,
         type: _type,
         mood: _selectedMood,
@@ -90,6 +93,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       if (pickedDate == null) return;
       setState(() {
         _selectedDate = pickedDate;
+      });
+    });
+  }
+
+  void _presentTimePicker() {
+    showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    ).then((pickedTime) {
+      if (pickedTime == null) return;
+      setState(() {
+        _selectedTime = pickedTime;
       });
     });
   }
@@ -214,6 +229,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       Row(
                         children: [
                           Expanded(
+                            flex: 3,
                             child: DropdownButtonFormField<WalletType>(
                               value: _selectedWallet,
                               decoration: InputDecoration(
@@ -227,8 +243,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                               onChanged: (val) => setState(() => _selectedWallet = val!),
                             ),
                           ),
-                          SizedBox(width: screenWidth * 0.04),
+                          SizedBox(width: screenWidth * 0.02),
                           Expanded(
+                            flex: 3,
                             child: InkWell(
                               onTap: _presentDatePicker,
                               child: InputDecorator(
@@ -237,7 +254,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                   border: const OutlineInputBorder(),
                                   isDense: true,
                                 ),
-                                child: Text(DateFormat.yMMMd().format(_selectedDate)),
+                                child: Text(DateFormat.MMMd().format(_selectedDate), style: TextStyle(fontSize: screenWidth * 0.033)),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: screenWidth * 0.02),
+                          Expanded(
+                            flex: 2,
+                            child: InkWell(
+                              onTap: _presentTimePicker,
+                              child: InputDecorator(
+                                decoration: const InputDecoration(
+                                  labelText: 'Time', 
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                ),
+                                child: Text(_selectedTime.format(context), style: TextStyle(fontSize: screenWidth * 0.033)),
                               ),
                             ),
                           ),

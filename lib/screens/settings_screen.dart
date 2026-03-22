@@ -77,6 +77,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: userProvider.isDarkTheme,
             onChanged: (val) => userProvider.toggleTheme(val),
           ),
+          SwitchListTile(
+            title: const Text('Cruel Insights'),
+            subtitle: const Text('Floating roasts on dashboard'),
+            secondary: const Icon(Icons.local_fire_department),
+            value: userProvider.showFloatingInsights,
+            onChanged: (val) => userProvider.toggleFloatingInsights(val),
+          ),
           const Divider(),
 
           // Language Switch
