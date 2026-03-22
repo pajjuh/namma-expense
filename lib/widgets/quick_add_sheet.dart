@@ -4,6 +4,7 @@ import '../models/transaction.dart';
 import '../providers/expense_provider.dart';
 import '../providers/user_provider.dart';
 import '../helpers/constants.dart';
+import 'calc_bottom_sheet.dart';
 
 class QuickAddSheet extends StatefulWidget {
   const QuickAddSheet({super.key});
@@ -135,6 +136,18 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
                         labelText: 'Amount',
                         border: const OutlineInputBorder(),
                         isDense: true,
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.calculate_outlined, size: 20, color: Theme.of(context).colorScheme.primary),
+                          tooltip: 'Calculator',
+                          onPressed: () async {
+                            final result = await CalcBottomSheet.show(context, initialValue: _amountController.text);
+                            if (result != null) {
+                              _amountController.text = result == result.toInt().toDouble()
+                                  ? result.toInt().toString()
+                                  : result.toStringAsFixed(2);
+                            }
+                          },
+                        ),
                       ),
                     ),
                   ),

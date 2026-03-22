@@ -5,6 +5,7 @@ import '../models/transaction.dart';
 import '../providers/expense_provider.dart';
 import '../providers/user_provider.dart';
 import '../helpers/constants.dart';
+import '../widgets/calc_bottom_sheet.dart';
 import '../widgets/mood_selector.dart';
 import 'package:nammaexpense/l10n/app_localizations.dart';
 
@@ -154,6 +155,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           prefixText: '$currency ',
                           labelText: AppLocalizations.of(context)!.amount,
                           border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(
+                            icon: Icon(Icons.calculate_outlined, color: Theme.of(context).colorScheme.primary),
+                            tooltip: 'Calculator',
+                            onPressed: () async {
+                              final result = await CalcBottomSheet.show(context, initialValue: _amountController.text);
+                              if (result != null) {
+                                _amountController.text = result == result.toInt().toDouble()
+                                    ? result.toInt().toString()
+                                    : result.toStringAsFixed(2);
+                              }
+                            },
+                          ),
                         ),
                         validator: (val) {
                           if (val == null || val.isEmpty) return AppLocalizations.of(context)!.requiredField;
