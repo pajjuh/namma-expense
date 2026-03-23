@@ -8,6 +8,7 @@ import '../widgets/daily_limit_slider.dart';
 import '../widgets/floating_insight_bubble.dart';
 import '../helpers/constants.dart';
 import 'all_transactions_screen.dart';
+import 'starred_expenses_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -77,14 +78,40 @@ class HomeScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  CircleAvatar(
-                    radius: screenWidth * 0.05,
-                    backgroundColor: isOverLimit ? Colors.red : Theme.of(context).colorScheme.primaryContainer,
-                    child: Icon(
-                      isOverLimit ? Icons.lock : Icons.person,
-                      color: isOverLimit ? Colors.white : Theme.of(context).colorScheme.primary,
-                      size: screenWidth * 0.05,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const StarredExpensesScreen()),
+                          );
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(screenWidth * 0.02),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withOpacity(0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.star,
+                            color: Colors.amber,
+                            size: screenWidth * 0.05,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: screenWidth * 0.025),
+                      CircleAvatar(
+                        radius: screenWidth * 0.05,
+                        backgroundColor: isOverLimit ? Colors.red : Theme.of(context).colorScheme.primaryContainer,
+                        child: Icon(
+                          isOverLimit ? Icons.lock : Icons.person,
+                          color: isOverLimit ? Colors.white : Theme.of(context).colorScheme.primary,
+                          size: screenWidth * 0.05,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -17,6 +17,7 @@ class Transaction {
   final String? description;
   final TransactionOrigin origin;
   final String? linkedGroupId;
+  final bool isStarred;
 
   Transaction({
     String? id,
@@ -31,6 +32,7 @@ class Transaction {
     this.description,
     this.origin = TransactionOrigin.manual,
     this.linkedGroupId,
+    this.isStarred = false,
   }) : id = id ?? uuid.v4(),
        time = time ?? '${TimeOfDay.now().hour.toString().padLeft(2, '0')}:${TimeOfDay.now().minute.toString().padLeft(2, '0')}';
 
@@ -73,6 +75,7 @@ class Transaction {
       'description': description,
       'origin': origin.index,
       'linkedGroupId': linkedGroupId,
+      'isStarred': isStarred ? 1 : 0,
     };
   }
 
@@ -91,6 +94,7 @@ class Transaction {
       description: map['description'],
       origin: map.containsKey('origin') ? TransactionOrigin.values[map['origin']] : TransactionOrigin.manual,
       linkedGroupId: map['linkedGroupId'],
+      isStarred: (map['isStarred'] ?? 0) == 1,
     );
   }
 }

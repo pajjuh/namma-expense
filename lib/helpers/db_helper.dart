@@ -18,7 +18,7 @@ class DBHelper {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -36,6 +36,9 @@ class DBHelper {
     }
     if (oldVersion < 4) {
       await db.execute("ALTER TABLE transactions ADD COLUMN time TEXT DEFAULT '00:00'");
+    }
+    if (oldVersion < 5) {
+      await db.execute('ALTER TABLE transactions ADD COLUMN isStarred INTEGER DEFAULT 0');
     }
   }
 
@@ -59,7 +62,8 @@ CREATE TABLE transactions (
   wallet $intType,
   description TEXT,
   origin $intType DEFAULT 0,
-  linkedGroupId TEXT
+  linkedGroupId TEXT,
+  isStarred INTEGER DEFAULT 0
 )
     ''');
 
@@ -105,6 +109,16 @@ CREATE TABLE subscriptions (
     final mapList = await db.query('transactions', orderBy: 'date DESC');
 
     return mapList.map((json) => model.Transaction.fromMap(json)).toList();
+  }
+
+  Future<void> toggleStar(String id, bool isStarred) async {
+    final db = await database;
+    await db.update(
+      'transactions',
+      {'isStarred': isStarred ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<void> deleteTransaction(String id) async {

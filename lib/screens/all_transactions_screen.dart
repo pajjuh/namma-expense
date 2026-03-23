@@ -248,14 +248,35 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
 
                               return Dismissible(
                                 key: Key(tx.id),
-                                direction: DismissDirection.endToStart,
                                 background: Container(
+                                  color: Colors.amber.shade700,
+                                  alignment: Alignment.centerLeft,
+                                  padding: EdgeInsets.only(left: screenWidth * 0.04),
+                                  child: Icon(
+                                    tx.isStarred ? Icons.star_border : Icons.star,
+                                    color: Colors.white,
+                                    size: screenWidth * 0.06,
+                                  ),
+                                ),
+                                secondaryBackground: Container(
                                   color: Colors.red,
                                   alignment: Alignment.centerRight,
                                   padding: EdgeInsets.only(right: screenWidth * 0.04),
                                   child: Icon(Icons.delete, color: Colors.white, size: screenWidth * 0.06),
                                 ),
-                                confirmDismiss: (_) async {
+                                confirmDismiss: (direction) async {
+                                  if (direction == DismissDirection.startToEnd) {
+                                    // Right swipe → toggle star
+                                    Provider.of<ExpenseProvider>(context, listen: false).toggleStarTransaction(tx.id);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(tx.isStarred ? 'Removed from Starred ⭐' : 'Added to Starred ⭐'),
+                                        duration: const Duration(seconds: 1),
+                                      ),
+                                    );
+                                    return false;
+                                  }
+                                  // Left swipe → delete (existing logic)
                                   if (tx.linkedGroupId != null) {
                                     return await showDialog<bool>(
                                       context: context,
@@ -326,10 +347,21 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                                     backgroundColor: cat.color.withOpacity(0.15),
                                     child: Icon(cat.icon, color: cat.color, size: screenWidth * 0.045),
                                   ),
-                                  title: Text(
-                                    tx.title,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(fontSize: screenWidth * 0.037),
+                                  title: Row(
+                                    children: [
+                                      if (tx.isStarred)
+                                        Padding(
+                                          padding: EdgeInsets.only(right: screenWidth * 0.015),
+                                          child: Icon(Icons.star, color: Colors.amber, size: screenWidth * 0.035),
+                                        ),
+                                      Expanded(
+                                        child: Text(
+                                          tx.title,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(fontSize: screenWidth * 0.037),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   subtitle: Text(
                                     '${DateFormat.MMMd().format(tx.date)}, ${tx.formattedTime} • ${cat.name}',

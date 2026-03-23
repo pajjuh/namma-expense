@@ -51,40 +51,114 @@ class TransactionList extends StatelessWidget {
         }
         final isExpense = tx.type == TransactionType.expense;
 
-        return Card(
-          margin: EdgeInsets.symmetric(
-            horizontal: screenWidth * 0.04, 
-            vertical: screenHeight * 0.007,
+        return Dismissible(
+          key: Key(tx.id),
+          background: Container(
+            margin: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.04,
+              vertical: screenHeight * 0.007,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.amber.shade700,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            alignment: Alignment.centerLeft,
+            padding: EdgeInsets.only(left: screenWidth * 0.05),
+            child: Icon(
+              tx.isStarred ? Icons.star_border : Icons.star,
+              color: Colors.white,
+              size: screenWidth * 0.06,
+            ),
           ),
-          child: ListTile(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => AddTransactionScreen(existingTransaction: tx),
+          secondaryBackground: Container(
+            margin: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.04,
+              vertical: screenHeight * 0.007,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            alignment: Alignment.centerRight,
+            padding: EdgeInsets.only(right: screenWidth * 0.05),
+            child: Icon(Icons.delete, color: Colors.white, size: screenWidth * 0.06),
+          ),
+          confirmDismiss: (direction) async {
+            if (direction == DismissDirection.startToEnd) {
+              // Right swipe → toggle star
+              Provider.of<ExpenseProvider>(context, listen: false).toggleStarTransaction(tx.id);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(tx.isStarred ? 'Removed from Starred ⭐' : 'Added to Starred ⭐'),
+                  duration: const Duration(seconds: 1),
                 ),
               );
-            },
-            leading: CircleAvatar(
-              radius: screenWidth * 0.05,
-              backgroundColor: cat.color.withOpacity(0.2),
-              child: Icon(cat.icon, color: cat.color, size: screenWidth * 0.05),
+              return false; // Don't dismiss
+            } else {
+              // Left swipe → delete
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Delete Transaction?'),
+                  content: const Text('This action cannot be undone.'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                    TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                Provider.of<ExpenseProvider>(context, listen: false).deleteTransaction(tx.id);
+              }
+              return false;
+            }
+          },
+          child: Card(
+            margin: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.04, 
+              vertical: screenHeight * 0.007,
             ),
-            title: Text(
-              tx.title, 
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: screenWidth * 0.04),
-            ),
-            subtitle: Text(
-              '${DateFormat.MMMd().format(tx.date)}, ${tx.formattedTime}',
-              style: TextStyle(fontSize: screenWidth * 0.032),
-            ),
-            trailing: Text(
-              '${isExpense ? '-' : '+'}$currency${tx.amount.toStringAsFixed(0)}',
-              style: TextStyle(
-                color: isExpense ? Colors.red : Colors.green,
-                fontWeight: FontWeight.bold,
-                fontSize: screenWidth * 0.038,
+            child: ListTile(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AddTransactionScreen(existingTransaction: tx),
+                  ),
+                );
+              },
+              leading: CircleAvatar(
+                radius: screenWidth * 0.05,
+                backgroundColor: cat.color.withOpacity(0.2),
+                child: Icon(cat.icon, color: cat.color, size: screenWidth * 0.05),
+              ),
+              title: Row(
+                children: [
+                  if (tx.isStarred)
+                    Padding(
+                      padding: EdgeInsets.only(right: screenWidth * 0.015),
+                      child: Icon(Icons.star, color: Colors.amber, size: screenWidth * 0.04),
+                    ),
+                  Expanded(
+                    child: Text(
+                      tx.title, 
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: screenWidth * 0.04),
+                    ),
+                  ),
+                ],
+              ),
+              subtitle: Text(
+                '${DateFormat.MMMd().format(tx.date)}, ${tx.formattedTime}',
+                style: TextStyle(fontSize: screenWidth * 0.032),
+              ),
+              trailing: Text(
+                '${isExpense ? '-' : '+'}$currency${tx.amount.toStringAsFixed(0)}',
+                style: TextStyle(
+                  color: isExpense ? Colors.red : Colors.green,
+                  fontWeight: FontWeight.bold,
+                  fontSize: screenWidth * 0.038,
+                ),
               ),
             ),
           ),

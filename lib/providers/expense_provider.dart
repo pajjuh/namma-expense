@@ -134,6 +134,16 @@ class ExpenseProvider with ChangeNotifier {
     await fetchTransactions();
   }
 
+  Future<void> toggleStarTransaction(String id) async {
+    final tx = _transactions.firstWhere((t) => t.id == id);
+    await _dbHelper.toggleStar(id, !tx.isStarred);
+    await fetchTransactions();
+  }
+
+  List<Transaction> get starredTransactions {
+    return _effectiveTransactions.where((t) => t.isStarred).toList();
+  }
+
   // --- Statistics Logic ---
   
   // Get expense amount by Category ID
