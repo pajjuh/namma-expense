@@ -24,21 +24,33 @@ class DBHelper {
     );
   }
 
+  // Helper to check if a column exists before adding it
+  Future<bool> _columnExists(Database db, String table, String column) async {
+    final result = await db.rawQuery('PRAGMA table_info($table)');
+    return result.any((row) => row['name'] == column);
+  }
+
+  Future<void> _safeAddColumn(Database db, String table, String column, String type) async {
+    if (!await _columnExists(db, table, column)) {
+      await db.execute('ALTER TABLE $table ADD COLUMN $column $type');
+    }
+  }
+
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      await db.execute('ALTER TABLE transactions ADD COLUMN origin INTEGER DEFAULT 0');
-      await db.execute('ALTER TABLE transactions ADD COLUMN linkedGroupId TEXT');
-      await db.execute('ALTER TABLE subscriptions ADD COLUMN type INTEGER DEFAULT 0');
-      await db.execute('ALTER TABLE subscriptions ADD COLUMN totalDurationDays INTEGER');
+      await _safeAddColumn(db, 'transactions', 'origin', 'INTEGER DEFAULT 0');
+      await _safeAddColumn(db, 'transactions', 'linkedGroupId', 'TEXT');
+      await _safeAddColumn(db, 'subscriptions', 'type', 'INTEGER DEFAULT 0');
+      await _safeAddColumn(db, 'subscriptions', 'totalDurationDays', 'INTEGER');
     }
     if (oldVersion < 3) {
-      await db.execute('ALTER TABLE subscriptions ADD COLUMN cycleDays INTEGER');
+      await _safeAddColumn(db, 'subscriptions', 'cycleDays', 'INTEGER');
     }
     if (oldVersion < 4) {
-      await db.execute("ALTER TABLE transactions ADD COLUMN time TEXT DEFAULT '00:00'");
+      await _safeAddColumn(db, 'transactions', 'time', "TEXT DEFAULT '00:00'");
     }
     if (oldVersion < 5) {
-      await db.execute('ALTER TABLE transactions ADD COLUMN isStarred INTEGER DEFAULT 0');
+      await _safeAddColumn(db, 'transactions', 'isStarred', 'INTEGER DEFAULT 0');
     }
   }
 
@@ -171,9 +183,11 @@ CREATE TABLE subscriptions (
   Future<void> clearAllData() async {
     final db = await database;
     await db.transaction((txn) async {
-      await txn.delete('transactions');
-      await txn.delete('subscriptions');
+      await txn.execute('DROP TABLE IF EXISTS transactions');
+      await txn.execute('DROP TABLE IF EXISTS subscriptions');
     });
+    // Recreate tables with latest schema — guaranteed clean state
+    await _createDB(db, 5);
   }
 
   Future<void> insertTransactionsBatch(List<model.Transaction> txns) async {
