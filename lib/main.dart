@@ -10,6 +10,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nammaexpense/l10n/app_localizations.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/quick_guide_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +38,15 @@ class NammaExpenseApp extends StatelessWidget {
             );
           }
 
+          Widget home;
+          if (userProvider.userName.isEmpty) {
+            home = const OnboardingScreen();
+          } else if (!userProvider.hasSeenGuide) {
+            home = const _FirstTimeGuideWrapper();
+          } else {
+            home = const DashboardScreen();
+          }
+
           return MaterialApp(
             title: 'NammaExpense',
             debugShowCheckedModeBanner: false,
@@ -62,12 +72,38 @@ class NammaExpenseApp extends StatelessWidget {
                 displayColor: userProvider.isDarkTheme ? Colors.white : Colors.black87,
               ),
             ),
-            home: userProvider.userName.isEmpty
-                ? const OnboardingScreen()
-                : const DashboardScreen(),
+            home: home,
           );
         },
       ),
     );
+  }
+}
+
+/// Wrapper that shows the Quick Guide once, then marks it seen and goes to Dashboard.
+class _FirstTimeGuideWrapper extends StatefulWidget {
+  const _FirstTimeGuideWrapper();
+
+  @override
+  State<_FirstTimeGuideWrapper> createState() => _FirstTimeGuideWrapperState();
+}
+
+class _FirstTimeGuideWrapperState extends State<_FirstTimeGuideWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const QuickGuideScreen()),
+      ).then((_) {
+        Provider.of<UserProvider>(context, listen: false).markGuideSeen();
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const DashboardScreen();
   }
 }

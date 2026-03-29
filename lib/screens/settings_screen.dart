@@ -6,6 +6,7 @@ import '../helpers/constants.dart';
 import '../services/backup_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'manage_categories_screen.dart';
+import 'quick_guide_screen.dart';
 import 'package:nammaexpense/l10n/app_localizations.dart';
 import '../providers/locale_provider.dart';
 
@@ -167,6 +168,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
+          ListTile(
+            title: const Text('Quick Guide'),
+            subtitle: const Text('Learn how to use the app'),
+            leading: const Icon(Icons.help_outline_rounded),
+            trailing: const Icon(Icons.chevron_right),
+            contentPadding: EdgeInsets.zero,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const QuickGuideScreen()),
+              );
+            },
+          ),
           Divider(height: screenHeight * 0.04),
           // Mode Switch
           Text(AppLocalizations.of(context)!.userMode, style: Theme.of(context).textTheme.titleMedium),
@@ -237,7 +251,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: const Text('About NammaExpense'),
-            subtitle: const Text('Version 1.1.0'),
+            subtitle: const Text('Version 1.1.2'),
             onTap: () {
               showDialog(
                 context: context,
@@ -246,7 +260,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       Image.asset('assets/applogo.jpg', width: screenWidth * 0.1, height: screenWidth * 0.1),
                       SizedBox(width: screenWidth * 0.03),
-                      const Expanded(child: Text('NammaExpense v1.1.0', style: TextStyle(fontSize: 18))),
+                      const Expanded(child: Text('NammaExpense v1.1.2', style: TextStyle(fontSize: 18))),
                     ],
                   ),
                   content: Column(

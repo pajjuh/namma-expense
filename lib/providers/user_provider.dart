@@ -12,6 +12,7 @@ class UserProvider with ChangeNotifier {
   bool _excludeSubsFromDailyLimit = false;
   bool _showFloatingInsights = true;
   bool _isLoading = true;
+  bool _hasSeenGuide = false;
   List<Category> _customCategories = [];
 
   String get userName => _userName;
@@ -22,6 +23,7 @@ class UserProvider with ChangeNotifier {
   bool get excludeSubsFromDailyLimit => _excludeSubsFromDailyLimit;
   bool get showFloatingInsights => _showFloatingInsights;
   bool get isLoading => _isLoading;
+  bool get hasSeenGuide => _hasSeenGuide;
 
   List<Category> get categories {
     List<Category> base;
@@ -56,6 +58,7 @@ class UserProvider with ChangeNotifier {
     _dailyLimit = prefs.getDouble(AppKeys.dailyLimit) ?? 0.0;
     _excludeSubsFromDailyLimit = prefs.getBool(AppKeys.excludeSubsFromLimit) ?? false;
     _showFloatingInsights = prefs.getBool('show_floating_insights') ?? true;
+    _hasSeenGuide = prefs.getBool('has_seen_guide') ?? false;
     
     final customCatsStr = prefs.getStringList('custom_categories') ?? [];
     importCustomCategories(customCatsStr);
@@ -136,6 +139,13 @@ class UserProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('show_floating_insights', show);
     _showFloatingInsights = show;
+    notifyListeners();
+  }
+
+  Future<void> markGuideSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_seen_guide', true);
+    _hasSeenGuide = true;
     notifyListeners();
   }
 
