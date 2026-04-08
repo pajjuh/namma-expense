@@ -37,6 +37,128 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  String _getWeekdayName(int weekday) {
+    const names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    if (weekday >= 1 && weekday <= 7) return names[weekday - 1];
+    return 'Monday';
+  }
+
+  String _getMonthName(int month) {
+    const names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    if (month >= 1 && month <= 12) return names[month - 1];
+    return 'January';
+  }
+
+  void _showWeekPickerDialog(UserProvider userProvider) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Start of Week'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(7, (index) {
+            final day = index + 1;
+            return RadioListTile<int>(
+              title: Text(_getWeekdayName(day)),
+              value: day,
+              groupValue: userProvider.startOfWeek,
+              onChanged: (val) {
+                if (val != null) {
+                  userProvider.setStartOfWeek(val);
+                  Navigator.pop(ctx);
+                }
+              },
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  void _showMonthDayPickerDialog(UserProvider userProvider) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Start of Month'),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 300,
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 5,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+              ),
+              itemCount: 31,
+              itemBuilder: (context, index) {
+                final day = index + 1;
+                final isSelected = userProvider.startOfMonth == day;
+                return InkWell(
+                  onTap: () {
+                    userProvider.setStartOfMonth(day);
+                    Navigator.pop(ctx);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Theme.of(context).disabledColor.withOpacity(0.2)),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '$day',
+                      style: TextStyle(
+                        color: isSelected ? Theme.of(context).colorScheme.onPrimary : null,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showYearMonthPickerDialog(UserProvider userProvider) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Start of Year'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: 12,
+            itemBuilder: (context, index) {
+              final month = index + 1;
+              return RadioListTile<int>(
+                title: Text(_getMonthName(month)),
+                value: month,
+                groupValue: userProvider.startOfYearMonth,
+                onChanged: (val) {
+                  if (val != null) {
+                    userProvider.setStartOfYearMonth(val);
+                    Navigator.pop(ctx);
+                  }
+                },
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
@@ -181,6 +303,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
+          Divider(height: screenHeight * 0.04),
+          
+          // Time Periods
+          Text('Time Periods', style: Theme.of(context).textTheme.titleMedium),
+          SizedBox(height: screenHeight * 0.01),
+          ListTile(
+            title: const Text('Start of Week'),
+            subtitle: Text(_getWeekdayName(userProvider.startOfWeek)),
+            leading: const Icon(Icons.calendar_view_week),
+            contentPadding: EdgeInsets.zero,
+            onTap: () => _showWeekPickerDialog(userProvider),
+          ),
+          ListTile(
+            title: const Text('Start of Month'),
+            subtitle: Text('Day ${userProvider.startOfMonth} of the month'),
+            leading: const Icon(Icons.calendar_month),
+            contentPadding: EdgeInsets.zero,
+            onTap: () => _showMonthDayPickerDialog(userProvider),
+          ),
+          ListTile(
+            title: const Text('Start of Year'),
+            subtitle: Text(_getMonthName(userProvider.startOfYearMonth)),
+            leading: const Icon(Icons.event),
+            contentPadding: EdgeInsets.zero,
+            onTap: () => _showYearMonthPickerDialog(userProvider),
+          ),
+          
           Divider(height: screenHeight * 0.04),
           // Mode Switch
           Text(AppLocalizations.of(context)!.userMode, style: Theme.of(context).textTheme.titleMedium),

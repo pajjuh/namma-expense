@@ -25,7 +25,13 @@ class NammaExpenseApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()..loadUserData()),
-        ChangeNotifierProvider(create: (_) => ExpenseProvider()..fetchTransactions()),
+        ChangeNotifierProxyProvider<UserProvider, ExpenseProvider>(
+          create: (_) => ExpenseProvider()..fetchTransactions(),
+          update: (_, userProvider, expenseProvider) => expenseProvider!..updateUserSettings(
+            userProvider.startOfWeek,
+            userProvider.startOfMonth,
+          ),
+        ),
         ChangeNotifierProvider(create: (_) => SubscriptionProvider()..fetchSubscriptions()),
         ChangeNotifierProvider(create: (_) => SmsProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),

@@ -3,6 +3,7 @@ import 'package:home_widget/home_widget.dart';
 import '../models/transaction.dart';
 import '../helpers/db_helper.dart';
 import '../helpers/constants.dart';
+import '../helpers/time_period_helper.dart';
 
 enum DashboardTimeFilter { day, week, month, lifetime }
 
@@ -12,6 +13,18 @@ class ExpenseProvider with ChangeNotifier {
 
   DashboardTimeFilter _dashboardFilter = DashboardTimeFilter.month;
   final String _appGroupId = 'NammaWidgetProvider';
+
+  int _startOfWeek = 1;
+  int _startOfMonth = 1;
+
+  void updateUserSettings(int startOfWeek, int startOfMonth) {
+    if (_startOfWeek != startOfWeek || _startOfMonth != startOfMonth) {
+      _startOfWeek = startOfWeek;
+      _startOfMonth = startOfMonth;
+      notifyListeners();
+      _updateWidget();
+    }
+  }
 
   DashboardTimeFilter get dashboardFilter => _dashboardFilter;
 
@@ -42,18 +55,21 @@ class ExpenseProvider with ChangeNotifier {
     if (_dashboardFilter == DashboardTimeFilter.lifetime) return _effectiveTransactions;
     
     final now = DateTime.now();
-    return _effectiveTransactions.where((txn) {
-      if (_dashboardFilter == DashboardTimeFilter.day) {
-        return txn.date.year == now.year && txn.date.month == now.month && txn.date.day == now.day;
-      } else if (_dashboardFilter == DashboardTimeFilter.week) {
-        // Simple 7 days window
-        final diff = now.difference(txn.date).inDays;
-        return diff >= 0 && diff < 7;
-      } else if (_dashboardFilter == DashboardTimeFilter.month) {
-        return txn.date.year == now.year && txn.date.month == now.month;
-      }
-      return true;
-    }).toList();
+    TimeRange? currentRange;
+
+    if (_dashboardFilter == DashboardTimeFilter.day) {
+      final start = DateTime(now.year, now.month, now.day);
+      final end = start.add(const Duration(days: 1)).subtract(const Duration(seconds: 1));
+      currentRange = TimeRange(start, end);
+    } else if (_dashboardFilter == DashboardTimeFilter.week) {
+      currentRange = TimePeriodHelper.getWeekRange(now, _startOfWeek);
+    } else if (_dashboardFilter == DashboardTimeFilter.month) {
+      currentRange = TimePeriodHelper.getMonthRange(now, _startOfMonth);
+    }
+
+    if (currentRange == null) return _effectiveTransactions;
+
+    return _effectiveTransactions.where((txn) => currentRange!.contains(txn.date)).toList();
   }
 
   double get filteredBalance {

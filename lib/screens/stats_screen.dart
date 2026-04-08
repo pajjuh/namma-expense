@@ -6,6 +6,7 @@ import '../models/transaction.dart' as model;
 import '../providers/expense_provider.dart';
 import '../providers/user_provider.dart';
 import '../helpers/constants.dart';
+import '../helpers/time_period_helper.dart';
 
 enum TimeSpan { daily, monthly, yearly }
 
@@ -21,31 +22,33 @@ class _StatsScreenState extends State<StatsScreen> {
   TimeSpan _timeSpan = TimeSpan.monthly;
 
   // Generate a list of months for the top selector (Lifetime + Last 11 months + Current)
-  List<DateTime?> _getAvailableMonths() {
+  List<DateTime?> _getAvailableMonths(int startOfMonth) {
     final now = DateTime.now();
     List<DateTime?> months = [null]; // null represents "Lifetime"
     
     for (int i = 11; i >= 0; i--) {
-      months.add(DateTime(now.year, now.month - i, 1));
+      months.add(TimePeriodHelper.getHistoricalMonthStart(now, i, startOfMonth));
     }
     return months;
   }
 
   // Filter transactions based on selected month (if any)
-  List<model.Transaction> _getFilteredTransactions(List<model.Transaction> allTxns) {
+  List<model.Transaction> _getFilteredTransactions(List<model.Transaction> allTxns, int startOfMonth) {
     if (_selectedMonth == null) return allTxns;
 
+    final range = TimePeriodHelper.getMonthRange(_selectedMonth!, startOfMonth);
+
     return allTxns.where((tx) {
-      return tx.date.year == _selectedMonth!.year &&
-             tx.date.month == _selectedMonth!.month;
+      return range.contains(tx.date);
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
     final allTxns = Provider.of<ExpenseProvider>(context).transactions;
-    final filteredTxns = _getFilteredTransactions(allTxns);
-    final currency = Provider.of<UserProvider>(context).currency;
+    final filteredTxns = _getFilteredTransactions(allTxns, userProvider.startOfMonth);
+    final currency = userProvider.currency;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
@@ -93,7 +96,7 @@ class _StatsScreenState extends State<StatsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 1. Month Selector Strip
-            _buildMonthSelector(screenWidth, isDark, textColor),
+            _buildMonthSelector(screenWidth, isDark, textColor, userProvider.startOfMonth),
             SizedBox(height: screenHeight * 0.03),
 
             // 2. Summary Cards (Income & Expense)
@@ -128,8 +131,8 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   // Horizontal scroller for Months
-  Widget _buildMonthSelector(double screenWidth, bool isDark, Color textColor) {
-    final months = _getAvailableMonths();
+  Widget _buildMonthSelector(double screenWidth, bool isDark, Color textColor, int startOfMonth) {
+    final months = _getAvailableMonths(startOfMonth);
     
     return SizedBox(
       height: 40,

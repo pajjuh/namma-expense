@@ -13,6 +13,9 @@ class UserProvider with ChangeNotifier {
   bool _showFloatingInsights = true;
   bool _isLoading = true;
   bool _hasSeenGuide = false;
+  int _startOfWeek = 1; // 1 = Monday
+  int _startOfMonth = 1; // 1 = 1st of month
+  int _startOfYearMonth = 1; // 1 = January
   List<Category> _customCategories = [];
 
   String get userName => _userName;
@@ -24,6 +27,9 @@ class UserProvider with ChangeNotifier {
   bool get showFloatingInsights => _showFloatingInsights;
   bool get isLoading => _isLoading;
   bool get hasSeenGuide => _hasSeenGuide;
+  int get startOfWeek => _startOfWeek;
+  int get startOfMonth => _startOfMonth;
+  int get startOfYearMonth => _startOfYearMonth;
 
   List<Category> get categories {
     List<Category> base;
@@ -59,6 +65,9 @@ class UserProvider with ChangeNotifier {
     _excludeSubsFromDailyLimit = prefs.getBool(AppKeys.excludeSubsFromLimit) ?? false;
     _showFloatingInsights = prefs.getBool('show_floating_insights') ?? true;
     _hasSeenGuide = prefs.getBool('has_seen_guide') ?? false;
+    _startOfWeek = prefs.getInt('start_of_week') ?? 1;
+    _startOfMonth = prefs.getInt('start_of_month') ?? 1;
+    _startOfYearMonth = prefs.getInt('start_of_year_month') ?? 1;
     
     final customCatsStr = prefs.getStringList('custom_categories') ?? [];
     importCustomCategories(customCatsStr);
@@ -149,6 +158,27 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setStartOfWeek(int day) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('start_of_week', day);
+    _startOfWeek = day;
+    notifyListeners();
+  }
+
+  Future<void> setStartOfMonth(int day) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('start_of_month', day);
+    _startOfMonth = day;
+    notifyListeners();
+  }
+
+  Future<void> setStartOfYearMonth(int month) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('start_of_year_month', month);
+    _startOfYearMonth = month;
+    notifyListeners();
+  }
+
   // --- Backup & Restore ---
 
   Map<String, dynamic> exportSettings() {
@@ -159,6 +189,9 @@ class UserProvider with ChangeNotifier {
       AppKeys.isDarkTheme: _isDarkTheme,
       AppKeys.dailyLimit: _dailyLimit,
       AppKeys.excludeSubsFromLimit: _excludeSubsFromDailyLimit,
+      'start_of_week': _startOfWeek,
+      'start_of_month': _startOfMonth,
+      'start_of_year_month': _startOfYearMonth,
       'custom_categories': _customCategories.map((c) => jsonEncode(c.toMap())).toList(),
     };
   }
@@ -195,6 +228,21 @@ class UserProvider with ChangeNotifier {
     if (data.containsKey(AppKeys.excludeSubsFromLimit)) {
       _excludeSubsFromDailyLimit = data[AppKeys.excludeSubsFromLimit];
       await prefs.setBool(AppKeys.excludeSubsFromLimit, _excludeSubsFromDailyLimit);
+    }
+    
+    if (data.containsKey('start_of_week')) {
+      _startOfWeek = data['start_of_week'];
+      await prefs.setInt('start_of_week', _startOfWeek);
+    }
+    
+    if (data.containsKey('start_of_month')) {
+      _startOfMonth = data['start_of_month'];
+      await prefs.setInt('start_of_month', _startOfMonth);
+    }
+    
+    if (data.containsKey('start_of_year_month')) {
+      _startOfYearMonth = data['start_of_year_month'];
+      await prefs.setInt('start_of_year_month', _startOfYearMonth);
     }
     
     if (data.containsKey('custom_categories')) {
